@@ -1,5 +1,5 @@
 // GitHub OAuth Configuration
-const DEFAULT_API_BASE_URL = "http://localhost:8080/api";
+const DEFAULT_API_BASE_URL = "https://codetracker-production-ab72.up.railway.app/api";
 
 function normalizeBaseUrl(value) {
   return String(value || "").trim().replace(/\/+$/, "");
