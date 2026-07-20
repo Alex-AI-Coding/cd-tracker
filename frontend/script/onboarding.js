@@ -1,198 +1,154 @@
-      const userApi = window.ApiClient?.user;
+const userApi = window.ApiClient?.user;
 
-      (async function guardInitializedUsers() {
-        try {
-          if (!window.ApiClient?.checkSessionState) return;
+(async function guardInitializedUsers() {
+  try {
+    if (!window.ApiClient?.checkSessionState) return;
 
-          const sessionState = await window.ApiClient.checkSessionState();
-          if (sessionState.authenticated && sessionState.fullyInitialized) {
-            window.location.replace("/dashboard/");
-          }
-        } catch (error) {
-          console.warn("Onboarding auth check failed:", error);
-        }
-      })();
+    const sessionState = await window.ApiClient.checkSessionState();
+    if (sessionState.authenticated && sessionState.fullyInitialized) {
+      window.location.replace("/dashboard/");
+    }
+  } catch (error) {
+    console.warn("Onboarding auth check failed:", error);
+  }
+})();
 
-      // ── Elements ──────────────────────────────────────────────
-      const form = document.getElementById("regForm");
-      const submitBtn = document.getElementById("submitBtn");
-      const spinner = document.getElementById("spinner");
-      const alertEl = document.getElementById("alert");
-      const fileInput = document.getElementById("profileFile");
-      const uploadZone = document.getElementById("uploadZone");
-      const avatar = document.getElementById("avatar");
-      const uploadTitle = document.getElementById("uploadTitle");
-      const uploadHint = document.getElementById("uploadHint");
-      const uploadFname = document.getElementById("uploadFname");
+const form = document.getElementById("regForm");
+const submitBtn = document.getElementById("submitBtn");
+const spinner = document.getElementById("spinner");
+const alertEl = document.getElementById("alert");
+const fileInput = document.getElementById("profileFile");
+const uploadZone = document.getElementById("uploadZone");
+const avatar = document.getElementById("avatar");
+const uploadTitle = document.getElementById("uploadTitle");
+const uploadHint = document.getElementById("uploadHint");
+const uploadFname = document.getElementById("uploadFname");
 
-      // ── Validators ────────────────────────────────────────────
-      const validators = {
-        firstName: (v) => (v.trim() ? null : "First name is required"),
-        lastName: (v) => (v.trim() ? null : "Last name is required"),
-        phoneNumber: (v) => {
-          if (!v.trim()) return "Phone number is required";
-          return /^\+?[\d\s\-()+]+$/.test(v) ? null : "Invalid phone format";
-        },
-        birthday: (v) => {
-          if (!v) return "Birthday is required";
-          const d = new Date(v),
-            now = new Date();
-          if (d >= now) return "Must be in the past";
-          if (now.getFullYear() - d.getFullYear() < 13)
-            return "Must be at least 13";
-          return null;
-        },
-        gender: (v) => (v ? null : "Gender is required"),
-        bio: (v) => (v.length > 350 ? "Max 350 characters" : null),
-      };
+const validators = {
+  firstName: (value) => (value.trim() ? null : "First name is required"),
+  lastName: (value) => (value.trim() ? null : "Last name is required"),
+  gender: (value) => (value ? null : "Gender is required"),
+};
 
-      function setFieldError(id, msg) {
-        const el = document.getElementById(id);
-        const err = document.getElementById(id + "Err");
-        if (msg) {
-          el.classList.add("err");
-          err.textContent = msg;
-          err.classList.add("show");
-          return false;
-        }
-        el.classList.remove("err");
-        err.classList.remove("show");
-        return true;
-      }
+function setFieldError(id, message) {
+  const input = document.getElementById(id);
+  const error = document.getElementById(`${id}Err`);
 
-      function validateField(id) {
-        const v = validators[id];
-        if (!v) return true;
-        const el = document.getElementById(id);
-        return setFieldError(id, v(el.value));
-      }
+  input.classList.toggle("err", Boolean(message));
+  error.classList.toggle("show", Boolean(message));
+  error.textContent = message || "";
+  return !message;
+}
 
-      function validateFile() {
-        const f = fileInput.files[0];
-        if (!f) {
-          clearFileError();
-          return true;
-        }
-        if (!f.type.startsWith("image/")) {
-          showFileError("Must be an image");
-          return false;
-        }
-        if (f.size > 5 * 1024 * 1024) {
-          showFileError("Max size is 5 MB");
-          return false;
-        }
-        clearFileError();
-        return true;
-      }
+function validateField(id) {
+  const input = document.getElementById(id);
+  return setFieldError(id, validators[id](input.value));
+}
 
-      function showFileError(msg) {
-        uploadZone.classList.add("err");
-        const e = document.getElementById("profileFileErr");
-        e.textContent = msg;
-        e.classList.add("show");
-      }
+function validateAll() {
+  return Object.keys(validators).every(validateField);
+}
 
-      function clearFileError() {
-        uploadZone.classList.remove("err");
-        document.getElementById("profileFileErr").classList.remove("show");
-      }
+Object.keys(validators).forEach((id) => {
+  const input = document.getElementById(id);
+  input.addEventListener("blur", () => validateField(id));
+  input.addEventListener("input", () => validateField(id));
+});
 
-      function validateAll() {
-        const fields = Object.keys(validators).map((id) => validateField(id));
-        const file = validateFile();
-        return fields.every(Boolean) && file;
-      }
+function showFileError(message) {
+  uploadZone.classList.add("err");
+  const error = document.getElementById("profileFileErr");
+  error.textContent = message;
+  error.classList.add("show");
+}
 
-      // ── Real-time validation ──────────────────────────────────
-      Object.keys(validators).forEach((id) => {
-        const el = document.getElementById(id);
-        if (el) {
-          el.addEventListener("blur", () => validateField(id));
-          el.addEventListener("input", () => validateField(id));
-        }
-      });
+function validateFile() {
+  const file = fileInput.files[0];
+  if (!file) return true;
 
-      // ── File preview ──────────────────────────────────────────
-      fileInput.addEventListener("change", handleFile);
+  if (!file.type.startsWith("image/")) {
+    showFileError("Choose an image file.");
+    return false;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    showFileError("Image must be 5 MB or smaller.");
+    return false;
+  }
 
-      function handleFile() {
-        const f = fileInput.files[0];
-        if (!f) return;
-        validateFile();
-        uploadFname.textContent = f.name;
-        uploadFname.style.display = "block";
-        uploadTitle.textContent = "Photo selected";
-        uploadHint.style.display = "none";
-        uploadZone.classList.add("has-file");
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          avatar.innerHTML = `<img src="${e.target.result}" alt="preview">`;
-        };
-        reader.readAsDataURL(f);
-      }
+  uploadZone.classList.remove("err");
+  document.getElementById("profileFileErr").classList.remove("show");
+  return true;
+}
 
-      // Drag & drop
-      uploadZone.addEventListener("dragover", (e) => {
-        e.preventDefault();
-        uploadZone.classList.add("drag");
-      });
-      uploadZone.addEventListener("dragleave", () =>
-        uploadZone.classList.remove("drag"),
-      );
-      uploadZone.addEventListener("drop", (e) => {
-        e.preventDefault();
-        uploadZone.classList.remove("drag");
-        const f = e.dataTransfer.files[0];
-        if (!f) return;
-        const dt = new DataTransfer();
-        dt.items.add(f);
-        fileInput.files = dt.files;
-        handleFile();
-      });
+function updateFilePreview() {
+  const file = fileInput.files[0];
+  if (!file || !validateFile()) return;
 
-      // ── Submit ────────────────────────────────────────────────
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        if (!validateAll()) return;
+  uploadFname.textContent = file.name;
+  uploadFname.style.display = "block";
+  uploadTitle.textContent = "Photo selected";
+  uploadHint.style.display = "none";
+  uploadZone.classList.add("has-file");
 
-        spinner.style.display = "inline-block";
-        submitBtn.disabled = true;
-        alertEl.className = "alert";
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    avatar.innerHTML = `<img src="${event.target.result}" alt="Profile preview">`;
+  };
+  reader.readAsDataURL(file);
+}
 
-        try {
-          const dataPayload = {
-            firstName: document.getElementById("firstName").value.trim(),
-            lastName: document.getElementById("lastName").value.trim(),
-            phoneNumber: document.getElementById("phoneNumber").value.trim(),
-            gender: document.getElementById("gender").value,
-            birthday: document.getElementById("birthday").value,
-            bio: document.getElementById("bio").value.trim() || null,
-          };
-          if (!userApi) {
-            throw new Error("API client is not initialized.");
-          }
+fileInput.addEventListener("change", updateFilePreview);
+uploadZone.addEventListener("dragover", (event) => {
+  event.preventDefault();
+  uploadZone.classList.add("drag");
+});
+uploadZone.addEventListener("dragleave", () => uploadZone.classList.remove("drag"));
+uploadZone.addEventListener("drop", (event) => {
+  event.preventDefault();
+  uploadZone.classList.remove("drag");
+  const file = event.dataTransfer.files[0];
+  if (!file) return;
+  const dataTransfer = new DataTransfer();
+  dataTransfer.items.add(file);
+  fileInput.files = dataTransfer.files;
+  updateFilePreview();
+});
 
-          const result = await userApi.register(dataPayload, fileInput.files[0]);
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!validateAll() || !validateFile()) return;
 
-          if (result) {
-            showAlert("success", result.message || "Profile completed!");
-            if (result.data)
-              localStorage.setItem("userData", JSON.stringify(result.data));
-            setTimeout(() => {
-              window.location.href = "/dashboard/";
-            }, 2000);
-          }
-        } catch (err) {
-          showAlert("error", err.message || "Registration failed. Try again.");
-        } finally {
-          spinner.style.display = "none";
-          submitBtn.disabled = false;
-        }
-      });
+  spinner.style.display = "inline-block";
+  submitBtn.disabled = true;
+  alertEl.className = "alert";
 
-      function showAlert(type, msg) {
-        alertEl.textContent = msg;
-        alertEl.className = `alert ${type} show`;
-        if (type === "error")
-          setTimeout(() => alertEl.classList.remove("show"), 5000);
-      }
+  try {
+    if (!userApi) throw new Error("API client is not initialized.");
+
+    const result = await userApi.register(
+      {
+        firstName: document.getElementById("firstName").value.trim(),
+        lastName: document.getElementById("lastName").value.trim(),
+        gender: document.getElementById("gender").value,
+      },
+      fileInput.files[0],
+    );
+
+    if (result) {
+      showAlert("success", result.message || "Profile completed!");
+      if (result.data) localStorage.setItem("userData", JSON.stringify(result.data));
+      setTimeout(() => window.location.replace("/dashboard/"), 1200);
+    }
+  } catch (error) {
+    showAlert("error", error.message || "Registration failed. Try again.");
+  } finally {
+    spinner.style.display = "none";
+    submitBtn.disabled = false;
+  }
+});
+
+function showAlert(type, message) {
+  alertEl.textContent = message;
+  alertEl.className = `alert ${type} show`;
+  if (type === "error") setTimeout(() => alertEl.classList.remove("show"), 5000);
+}
