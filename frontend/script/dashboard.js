@@ -9,6 +9,10 @@ const classroomApi = window.ApiClient?.classrooms;
 // ── DOM Elements ────────────────────────────────────────────────────────────
 const createClassBtn       = document.getElementById('createClassBtn');
 const joinClassBtn         = document.getElementById('joinClassBtn');
+const searchClassBtn       = document.getElementById('searchClassBtn');
+const headerSearch         = document.getElementById('headerSearch');
+const classSearchInput     = document.getElementById('classSearchInput');
+const clearClassSearchBtn  = document.getElementById('clearClassSearchBtn');
 const createModal          = document.getElementById('createModal');
 const joinModal            = document.getElementById('joinModal');
 const profileModal         = document.getElementById('profileModal');
@@ -51,6 +55,7 @@ let joinPasscodeClassCode = '';
 let currentTab = 'created';
 let classroomsData = { created: [], joined: [] };
 let classLoadState = { created: false, joined: false };
+let classroomSearchTerm = '';
 
 // Manage modal state
 let currentManageClassId = null;
