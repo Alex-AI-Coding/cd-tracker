@@ -800,11 +800,9 @@ function isProfileInitialized(profile) {
     if (!profile || typeof profile !== 'object') return false;
 
     const hasName = Boolean(String(profile.firstName || '').trim()) || Boolean(String(profile.lastName || '').trim());
-    const hasPhone = Boolean(String(unwrap(profile.phoneNumber) || '').trim());
     const hasGender = Boolean(String(unwrap(profile.gender) || '').trim());
-    const hasBirthday = Boolean(String(unwrap(profile.birthday) || '').trim());
 
-    return hasName || (hasPhone && hasGender && hasBirthday);
+    return hasName || hasGender;
 }
 
 function applyProfileToUI(data) {
@@ -898,17 +896,11 @@ async function openProfileModal() {
 
         const firstNameEl = document.getElementById('editFirstNameInput');
         const lastNameEl  = document.getElementById('editLastNameInput');
-        const phoneEl     = document.getElementById('editPhoneInput');
         const genderEl    = document.getElementById('editGenderInput');
-        const birthdayEl  = document.getElementById('editBirthdayInput');
-        const bioEl       = document.getElementById('editBioInput');
 
         if (firstNameEl) firstNameEl.value = data.firstName || '';
         if (lastNameEl)  lastNameEl.value  = data.lastName || '';
-        if (phoneEl)     phoneEl.value     = unwrap(data.phoneNumber) || '';
         if (genderEl)    genderEl.value    = unwrap(data.gender) || '';
-        if (birthdayEl)  birthdayEl.value  = unwrap(data.birthday) || '';
-        if (bioEl)       bioEl.value       = data.bio || '';
 
     } catch (error) {
         console.error('Error opening profile:', error);
@@ -946,19 +938,13 @@ picEl.style.color = '#000';
 async function handleSaveProfile() {
     const firstNameEl = document.getElementById('editFirstNameInput');
     const lastNameEl  = document.getElementById('editLastNameInput');
-    const phoneEl     = document.getElementById('editPhoneInput');
     const genderEl    = document.getElementById('editGenderInput');
-    const birthdayEl  = document.getElementById('editBirthdayInput');
-    const bioEl       = document.getElementById('editBioInput');
 
     const firstName   = firstNameEl?.value.trim() || '';
     const lastName    = lastNameEl?.value.trim() || '';
-    const phoneNumber = phoneEl?.value.trim() || '';
     const gender      = genderEl?.value.trim() || '';
-    const birthday    = birthdayEl?.value || '';
-    const bio         = bioEl?.value || '';
 
-    if (!firstName || !lastName || !phoneNumber || !gender || !birthday) {
+    if (!firstName || !lastName || !gender) {
         showNotification('Please fill all required fields', 'error');
         return;
     }
@@ -973,7 +959,7 @@ async function handleSaveProfile() {
             throw new Error('API client is not initialized.');
         }
 
-        await userApi.updateProfile({ firstName, lastName, phoneNumber, gender, birthday, bio });
+        await userApi.updateProfile({ firstName, lastName, gender });
 
         showNotification('Profile updated successfully!', 'success');
         closeModal(profileModal);
