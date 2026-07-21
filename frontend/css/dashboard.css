@@ -45,6 +45,7 @@ html {
         align-items: center;
         border-bottom: 1px solid #21262d;
         position: sticky;
+        position: relative;
         top: 0;
         z-index: 100;
     }
@@ -89,7 +90,7 @@ html {
         display: flex;
         gap: 6px;
         align-items: center;
-        position: relative;
+        position: static;
     }
 
     .search-class {
@@ -144,25 +145,6 @@ html {
 
     .header-search input::placeholder {
         color: #8b949e;
-    }
-
-    #clearClassSearchBtn {
-        width: 24px;
-        height: 24px;
-        border: none;
-        border-radius: 999px;
-        background: rgba(139, 148, 158, 0.12);
-        color: #c9d1d9;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        flex-shrink: 0;
-    }
-
-    #clearClassSearchBtn:hover {
-        background: rgba(88, 166, 255, 0.16);
-        color: #58a6ff;
     }
 
     /* ── Buttons ──────────────────────────────────────────────────── */

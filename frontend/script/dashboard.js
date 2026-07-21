@@ -12,7 +12,6 @@ const joinClassBtn         = document.getElementById('joinClassBtn');
 const searchClassBtn       = document.getElementById('searchClassBtn');
 const headerSearch         = document.getElementById('headerSearch');
 const classSearchInput     = document.getElementById('classSearchInput');
-const clearClassSearchBtn  = document.getElementById('clearClassSearchBtn');
 const createModal          = document.getElementById('createModal');
 const joinModal            = document.getElementById('joinModal');
 const profileModal         = document.getElementById('profileModal');
@@ -562,7 +561,6 @@ function setupEventListeners() {
 
     // Header search
     searchClassBtn?.addEventListener('click', () => toggleHeaderSearch(true));
-    clearClassSearchBtn?.addEventListener('click', clearClassSearch);
     classSearchInput?.addEventListener('input', (e) => {
         classroomSearchTerm = normalizeSearchText(e.target.value);
         renderClasses();
