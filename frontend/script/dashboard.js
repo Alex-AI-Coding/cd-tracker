@@ -64,6 +64,7 @@ let currentManageClassroomStatus = 'ACTIVE';
 // Current user
 let currentUser = null;
 const welcomeBannerStoragePrefix = 'codetracker:dashboard:welcome-hidden:';
+const normalizeSearchText = (value) => String(value || '').trim().toLowerCase();
 
 // ══════════════════════════════════════════════════════════════════════════════
 // INITIALIZATION
@@ -559,6 +560,20 @@ function setupEventListeners() {
     confirmJoin?.addEventListener('click', handleJoinClass);
     saveProfileBtn?.addEventListener('click', handleSaveProfile);
 
+    // Header search
+    searchClassBtn?.addEventListener('click', () => toggleHeaderSearch(true));
+    clearClassSearchBtn?.addEventListener('click', clearClassSearch);
+    classSearchInput?.addEventListener('input', (e) => {
+        classroomSearchTerm = normalizeSearchText(e.target.value);
+        renderClasses();
+    });
+    classSearchInput?.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            clearClassSearch();
+            toggleHeaderSearch(false);
+        }
+    });
+
     // Profile menu
     userIcon?.addEventListener('click', toggleProfileDropdown);
     viewProfileBtn?.addEventListener('click', (e) => {
@@ -683,10 +698,43 @@ function setupEventListeners() {
     document.addEventListener('click', (e) => {
         const isUserIconClick = userIcon && userIcon.contains(e.target);
         const isDropdownClick = profileDropdown && profileDropdown.contains(e.target);
+        const isSearchClick = headerSearch && headerSearch.contains(e.target);
+        const isSearchButtonClick = searchClassBtn && searchClassBtn.contains(e.target);
         
-        if (!isUserIconClick && !isDropdownClick) {
+        if (!isUserIconClick && !isDropdownClick && !isSearchClick && !isSearchButtonClick) {
             closeProfileDropdown();
+            toggleHeaderSearch(false);
         }
+    });
+}
+
+function toggleHeaderSearch(forceOpen = null) {
+    if (!headerSearch || !searchClassBtn) return;
+
+    const shouldOpen = forceOpen === null ? !headerSearch.classList.contains('is-open') : forceOpen;
+    headerSearch.classList.toggle('is-open', shouldOpen);
+    searchClassBtn.setAttribute('aria-expanded', String(shouldOpen));
+
+    if (shouldOpen) {
+        requestAnimationFrame(() => classSearchInput?.focus());
+    } else if (document.activeElement === classSearchInput) {
+        classSearchInput.blur();
+    }
+}
+
+function clearClassSearch() {
+    classroomSearchTerm = '';
+    if (classSearchInput) classSearchInput.value = '';
+    renderClasses();
+}
+
+function getFilteredClasses(classes = []) {
+    if (!classroomSearchTerm) return classes;
+
+    return classes.filter((classroom) => {
+        const className = normalizeSearchText(classroom?.className || classroom?.name || classroom?.title);
+        const classCode = normalizeSearchText(classroom?.classCode || classroom?.code || classroom?.inviteCode || classroom?.id);
+        return className.includes(classroomSearchTerm) || classCode.includes(classroomSearchTerm);
     });
 }
 
@@ -1267,11 +1315,14 @@ function renderClasses() {
         return;
     }
 
-    const classes   = classroomsData[currentTab] || [];
+    const classes   = getFilteredClasses(classroomsData[currentTab] || []);
     const isCreated = currentTab === 'created';
 
     if (classes.length === 0) {
-        const msg = isCreated
+        const hasSearch = Boolean(classroomSearchTerm);
+        const msg = hasSearch
+            ? `No classes match "${classSearchInput?.value || ''}".`
+            : isCreated
             ? 'No classes created yet. Create your first class to get started!'
             : "You haven't joined any classes yet.";
         container.innerHTML = `<p class="empty-message">${msg}</p>`;

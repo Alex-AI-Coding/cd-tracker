@@ -88,6 +88,81 @@ html {
     .action-buttons {
         display: flex;
         gap: 6px;
+        align-items: center;
+        position: relative;
+    }
+
+    .search-class {
+        width: 34px;
+        justify-content: center;
+        padding: 6px 0;
+        flex-shrink: 0;
+    }
+
+    .header-search {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%) scale(0.96);
+        width: min(420px, calc(100vw - 220px));
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border-radius: 999px;
+        border: 1px solid #30363d;
+        background: #0d1117;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+        opacity: 0;
+        pointer-events: none;
+        visibility: hidden;
+        transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s ease;
+        z-index: 120;
+    }
+
+    .header-search.is-open {
+        opacity: 1;
+        pointer-events: auto;
+        visibility: visible;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    .header-search i {
+        color: #58a6ff;
+        font-size: 12px;
+        flex-shrink: 0;
+    }
+
+    .header-search input {
+        width: 100%;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: #e6edf3;
+        font-size: 13px;
+    }
+
+    .header-search input::placeholder {
+        color: #8b949e;
+    }
+
+    #clearClassSearchBtn {
+        width: 24px;
+        height: 24px;
+        border: none;
+        border-radius: 999px;
+        background: rgba(139, 148, 158, 0.12);
+        color: #c9d1d9;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+    #clearClassSearchBtn:hover {
+        background: rgba(88, 166, 255, 0.16);
+        color: #58a6ff;
     }
 
     /* ── Buttons ──────────────────────────────────────────────────── */
@@ -1616,6 +1691,11 @@ html {
     .action-buttons {
         gap: 4px;
         flex-shrink: 0;
+    }
+
+    .header-search {
+        width: min(300px, calc(100vw - 120px));
+        padding: 7px 9px;
     }
 
     .dashboard-main { padding: 10px 12px 20px; }
