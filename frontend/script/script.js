@@ -1,10 +1,9 @@
 // GitHub OAuth Configuration
-const DEFAULT_API_BASE_URL =
-  "https://codetracker-production-ab72.up.railway.app/api";
+const DEFAULT_API_BASE_URL = "https://codetracker-production-ab72.up.railway.app/api";
 
 function normalizeBaseUrl(value) {
   return String(value || "").trim().replace(/\/+$/, "");
-} 
+}
 
 function readApiBaseUrl() {
   const fromClient = window.ApiClient?.baseUrl;
@@ -54,10 +53,22 @@ async function handleOAuthCallbackRedirect() {
   if (params.get("oauth") !== "github") return false;
 
   const success = parseBooleanParam(params.get("success"));
+  const alreadyRegistered = parseBooleanParam(params.get("registered"));
   const error = params.get("error");
 
   if (success === true) {
     clearOAuthQueryParamsFromUrl();
+
+    if (alreadyRegistered === true) {
+      window.location.replace("/dashboard/");
+      return true;
+    }
+
+    if (alreadyRegistered === false) {
+      window.location.replace("/onboarding/");
+      return true;
+    }
+
     await redirectAuthenticatedSession();
     return true;
   }

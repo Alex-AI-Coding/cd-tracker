@@ -1,1710 +1,534 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Dashboard - CodeTracker</title>
-
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <link rel="icon" type="image/png" href="/frontend/asset/git.png">
-
-    <link rel="stylesheet" href="/frontend/css/dashboard.css">
-
-    <!-- AI Chatbot CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link rel="icon" type="image/png" href="/frontend/asset/git.png">
+        <link rel="stylesheet" href="/frontend/css/dashboard.css">
     <link rel="stylesheet" href="/frontend/css/chatbot.css">
 </head>
-
 <body>
 
     <!-- ── Header ─────────────────────────────────────────────────────────── -->
-
     <header class="dashboard-header">
-
         <div class="header-left">
-
             <div class="logo">
                 <i class="fa-brands fa-github"></i>
                 <span class="logo-text">CodeTracker</span>
             </div>
-
             <span class="header-divider"></span>
-
-            <span class="header-label" id="welcomeMsg">
-                Dashboard
-            </span>
-
+            <span class="header-label" id="welcomeMsg">Dashboard</span>
         </div>
 
         <div class="header-right">
-
             <div class="action-buttons">
-
+                <button class="btn btn-compact search-class" id="searchClassBtn" type="button" aria-label="Search classrooms" aria-expanded="false" title="Search classrooms">
+                    <i class="fas fa-search"></i>
+                </button>
+                <div class="header-search" id="headerSearch">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    <input type="search" id="classSearchInput" placeholder="Search classrooms..." aria-label="Search classrooms by name" autocomplete="off">
+                </div>
                 <button class="btn btn-compact create-class" id="createClassBtn">
-                    <i class="fas fa-plus"></i>
-                    <span class="btn-label">New Class</span>
+                    <i class="fas fa-plus"></i> <span class="btn-label">New Class</span>
                 </button>
-
                 <button class="btn btn-compact join-class" id="joinClassBtn">
-                    <i class="fas fa-link"></i>
-                    <span class="btn-label">Join</span>
+                    <i class="fas fa-link"></i> <span class="btn-label">Join</span>
                 </button>
-
             </div>
 
             <div class="profile">
-
                 <div class="user-info">
                     <strong id="userName">Loading...</strong>
                 </div>
-
                 <div class="user-icon" id="userIcon"></div>
 
                 <div class="profile-dropdown" id="profileDropdown">
-
                     <div class="profile-info">
                         <strong id="fullName"></strong>
                         <small id="username"></small>
                     </div>
-
                     <button class="dropdown-btn" id="viewProfileBtn">
-                        <i class="fas fa-user-pen"></i>
-                        My Profile
+                        <i class="fas fa-user-pen"></i> My Profile
                     </button>
-
                     <button class="dropdown-btn" id="logoutBtn">
-                        <i class="fas fa-right-from-bracket"></i>
-                        Logout
+                        <i class="fas fa-right-from-bracket"></i> Logout
                     </button>
-
                 </div>
-
             </div>
-
         </div>
-
     </header>
 
-
     <!-- ── Main ───────────────────────────────────────────────────────────── -->
-
     <main class="dashboard-main">
 
         <div class="welcome-container is-hidden" id="welcomeBanner">
-
-            <button
-                type="button"
-                class="welcome-hide-btn"
-                id="hideWelcomeBtn"
-                aria-label="Hide welcome message">
-                &times;
-            </button>
-
-            <h1>
-                Welcome,
-                <span id="welcomeUser">User</span>
-            </h1>
-
-            <p>
-                We're glad to see you in the Codetracker.
-            </p>
-
+            <button type="button" class="welcome-hide-btn" id="hideWelcomeBtn" aria-label="Hide welcome message">&times;</button>
+            <h1>Welcome, <span id="welcomeUser">User</span> 👋</h1>
+            <p>We're glad to see you in the Codetracker.</p>
         </div>
-
-
         <!-- Tabs -->
-
         <div class="tabs-container">
-
             <button class="tab-button active" data-tab="created">
-                My Classes
-                <span class="tab-count">0</span>
+                My Classes <span class="tab-count">0</span>
             </button>
-
             <button class="tab-button" data-tab="joined">
-                Joined Classes
-                <span class="tab-count">0</span>
+                Joined Classes <span class="tab-count">0</span>
             </button>
-
         </div>
-
 
         <!-- Classroom Grid -->
-
         <div class="classroom-grid" id="classroomGrid">
-
-            <div
-                class="loading-message loading-state"
-                aria-live="polite"
-                aria-label="Loading classes">
-
-                <span
-                    class="loading-spinner"
-                    aria-hidden="true">
-                </span>
-
+            <div class="loading-message loading-state" aria-live="polite" aria-label="Loading classes">
+                <span class="loading-spinner" aria-hidden="true"></span>
             </div>
-
         </div>
 
     </main>
 
-
     <!-- ── Create Class Modal ─────────────────────────────────────────────── -->
-
     <div class="modal" id="createModal">
-
         <div class="modal-content">
-
             <h2>Create New Class</h2>
-
-            <p class="modal-subtitle">
-                Set up your classroom with custom settings
-            </p>
+            <p class="modal-subtitle">Set up your classroom with custom settings</p>
 
             <div>
-
-                <label for="classNameInput">
-                    Class Name *
-                </label>
-
-                <input
-                    type="text"
-                    id="classNameInput"
-                    placeholder="e.g., Computer Science 101"
-                    required>
-
-                <span class="field-hint">
-                    3–100 characters
-                </span>
-
+                <label for="classNameInput">Class Name *</label>
+                <input type="text" id="classNameInput" placeholder="e.g., Computer Science 101" required>
+                <span class="field-hint">3–100 characters</span>
             </div>
 
             <div>
-
-                <label for="classDescInput">
-                    Description
-                </label>
-
-                <textarea
-                    id="classDescInput"
-                    placeholder="Brief description of your class (optional)">
-                </textarea>
-
-                <span class="field-hint">
-                    Maximum 500 characters
-                </span>
-
+                <label for="classDescInput">Description</label>
+                <textarea id="classDescInput" placeholder="Brief description of your class (optional)"></textarea>
+                <span class="field-hint">Maximum 500 characters</span>
             </div>
 
             <div>
-
-                <label for="maxStudentsInput">
-                    Maximum Students *
-                </label>
-
-                <input
-                    type="number"
-                    id="maxStudentsInput"
-                    value="100"
-                    min="1"
-                    max="100"
-                    required>
-
-                <span class="field-hint">
-                    Between 1 and 100 students
-                </span>
-
+                <label for="maxStudentsInput">Maximum Students *</label>
+                <input type="number" id="maxStudentsInput" value="100" min="1" max="100" required>
+                <span class="field-hint">Between 1 and 100 students</span>
             </div>
 
             <div>
-
-                <label
-                    class="toggle-option"
-                    for="passcodeToggle">
-
+                <label class="toggle-option" for="passcodeToggle">
                     <div class="toggle-info">
-
-                        <strong>
-                            Require Passcode
-                        </strong>
-
-                        <small>
-                            Students need a passcode to join this class
-                        </small>
-
+                        <strong>Require Passcode</strong>
+                        <small>Students need a passcode to join this class</small>
                     </div>
-
                     <div class="toggle-switch">
-
-                        <input
-                            type="checkbox"
-                            id="passcodeToggle">
-
+                        <input type="checkbox" id="passcodeToggle">
                         <span class="toggle-slider"></span>
-
                     </div>
-
                 </label>
-
-
-                <div
-                    id="passcodeSection"
-                    style="display:none;">
-
-                    <label for="passcodeInput">
-                        Passcode *
-                    </label>
-
-                    <div class="password-wrapper">
-
-                        <input
-                            type="password"
-                            id="passcodeInput"
-                            placeholder="Enter a secure passcode">
-
-                        <button
-                            type="button"
-                            class="toggle-password"
-                            data-target="passcodeInput">
-
-                            <i class="fas fa-eye"></i>
-
-                        </button>
-
-                    </div>
-
-                    <span class="field-hint">
-                        Minimum 4 characters
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            <div class="modal-actions">
-
-                <button
-                    class="btn cancel"
-                    id="cancelCreate">
-                    Cancel
-                </button>
-
-                <button
-                    class="btn primary"
-                    id="confirmCreate">
-                    Create Class
-                </button>
-
-            </div>
-
-        </div>
-
+                <div id="passcodeSection" style="display:none;">
+    <label for="passcodeInput">Passcode *</label>
+    <div class="password-wrapper">
+        <input type="password" id="passcodeInput" placeholder="Enter a secure passcode">
+        <button type="button" class="toggle-password" data-target="passcodeInput">
+            <i class="fas fa-eye"></i>
+        </button>
     </div>
-
+    <span class="field-hint">Minimum 4 characters</span>
+</div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn cancel" id="cancelCreate">Cancel</button>
+                <button class="btn primary" id="confirmCreate">Create Class</button>
+            </div>
+        </div>
+    </div>
 
     <!-- ── Join Class Modal ───────────────────────────────────────────────── -->
-
     <div class="modal" id="joinModal">
-
         <div class="modal-content">
-
-            <h2>
-                Join a Class
-            </h2>
-
-            <p class="modal-subtitle">
-                Enter the class code provided by your teacher
-            </p>
+            <h2>Join a Class</h2>
+            <p class="modal-subtitle">Enter the class code provided by your teacher</p>
 
             <div>
-
-                <label for="classCodeInput">
-                    Class Code *
-                </label>
-
-                <input
-                    type="text"
-                    id="classCodeInput"
-                    placeholder="e.g., ABC123XYZ"
-                    required>
-
-                <span class="field-hint">
-                    Enter the unique class code
-                </span>
-
+                <label for="classCodeInput">Class Code *</label>
+                <input type="text" id="classCodeInput" placeholder="e.g., ABC123XYZ" required>
+                <span class="field-hint">Enter the unique class code</span>
             </div>
 
-
-            <div
-                id="joinPasscodeSection"
-                style="display:none;">
-
-                <label for="joinPasscodeInput">
-                    Passcode *
-                </label>
-
+            <div id="joinPasscodeSection" style="display:none;">
+                <label for="joinPasscodeInput">Passcode *</label>
                 <div class="password-wrapper">
-
-                    <input
-                        type="password"
-                        id="joinPasscodeInput"
-                        placeholder="Enter the class passcode">
-
-                    <button
-                        type="button"
-                        class="toggle-password"
-                        data-target="joinPasscodeInput">
-
+                    <input type="password" id="joinPasscodeInput" placeholder="Enter the class passcode">
+                    <button type="button" class="toggle-password" data-target="joinPasscodeInput">
                         <i class="fas fa-eye"></i>
-
                     </button>
-
                 </div>
-
-                <span class="field-hint">
-                    This field appears automatically when the class requires a passcode
-                </span>
-
+                <span class="field-hint">This field appears automatically when the class requires a passcode</span>
             </div>
-
 
             <div class="modal-actions">
-
-                <button
-                    class="btn cancel"
-                    id="cancelJoin">
-                    Cancel
-                </button>
-
-                <button
-                    class="btn primary"
-                    id="confirmJoin">
-                    Join Class
-                </button>
-
+                <button class="btn cancel" id="cancelJoin">Cancel</button>
+                <button class="btn primary" id="confirmJoin">Join Class</button>
             </div>
-
         </div>
-
     </div>
 
-
-    <!-- ── Profile Modal ──────────────────────────────────────────────────── -->
-
+    <!-- ── Profile Modal (Combined View + Edit) ────────────────────────── -->
     <div class="modal" id="profileModal">
-
         <div class="modal-content profile-modal-content">
-
             <div class="profile-modal-header">
-
-                <h2>
-                    <i class="fas fa-id-card"></i>
-                    My Profile
-                </h2>
-
-                <button
-                    class="profile-modal-close"
-                    id="closeProfileModal">
-                    &times;
-                </button>
-
+                <h2><i class="fas fa-id-card"></i> My Profile</h2>
+                <button class="profile-modal-close" id="closeProfileModal">&times;</button>
             </div>
-
 
             <div class="profile-modal-body">
-
-
                 <!-- Left: Profile Picture -->
-
                 <div class="profile-picture-section">
-
                     <div class="profile-picture-wrapper">
-
-                        <div
-                            class="profile-picture-large"
-                            id="profilePictureLarge">
-
+                        <div class="profile-picture-large" id="profilePictureLarge">
                             <span id="profileInitialsLarge"></span>
-
                         </div>
-
-
-                        <div
-                            class="profile-picture-overlay"
-                            id="profilePictureOverlay">
-
+                        <div class="profile-picture-overlay" id="profilePictureOverlay">
                             <i class="fas fa-camera"></i>
-
-                            <span>
-                                Change
-                            </span>
-
+                            <span>Change</span>
                         </div>
-
                     </div>
-
-
-                    <input
-                        type="file"
-                        id="profilePictureInput"
-                        accept="image/*"
-                        style="display:none;">
-
-
+                    <input type="file" id="profilePictureInput" accept="image/*" style="display:none;">
                     <div class="profile-picture-actions">
-
-                        <button
-                            class="btn-profile-action btn-upload"
-                            id="uploadPictureBtn">
-
-                            <i class="fas fa-upload"></i>
-                            Upload Photo
-
+                        <button class="btn-profile-action btn-upload" id="uploadPictureBtn">
+                            <i class="fas fa-upload"></i> Upload Photo
                         </button>
-
-
-                        <button
-                            class="btn-profile-action btn-remove"
-                            id="removePictureBtn">
-
-                            <i class="fas fa-trash-alt"></i>
-                            Remove
-
+                        <button class="btn-profile-action btn-remove" id="removePictureBtn">
+                            <i class="fas fa-trash-alt"></i> Remove
                         </button>
-
                     </div>
-
                 </div>
-
 
                 <!-- Right: Editable Personal Information -->
-
                 <div class="profile-info-section">
-
                     <div class="profile-form">
-
-
                         <div class="profile-form-row">
-
                             <div class="profile-form-group">
-
-                                <label for="editFirstNameInput">
-
-                                    <i class="fas fa-user"></i>
-                                    First Name
-
-                                </label>
-
-                                <input
-                                    type="text"
-                                    id="editFirstNameInput"
-                                    placeholder="First name"
-                                    required>
-
+                                <label for="editFirstNameInput"><i class="fas fa-user"></i> First Name</label>
+                                <input type="text" id="editFirstNameInput" placeholder="First name" required>
                             </div>
-
-
                             <div class="profile-form-group">
-
-                                <label for="editLastNameInput">
-
-                                    <i class="fas fa-user"></i>
-                                    Last Name
-
-                                </label>
-
-                                <input
-                                    type="text"
-                                    id="editLastNameInput"
-                                    placeholder="Last name"
-                                    required>
-
+                                <label for="editLastNameInput"><i class="fas fa-user"></i> Last Name</label>
+                                <input type="text" id="editLastNameInput" placeholder="Last name" required>
                             </div>
-
                         </div>
-
-
                         <div class="profile-form-row">
-
                             <div class="profile-form-group">
-
-                                <label for="editPhoneInput">
-
-                                    <i class="fas fa-phone"></i>
-                                    Phone
-
-                                </label>
-
-                                <input
-                                    type="text"
-                                    id="editPhoneInput"
-                                    placeholder="+639171234567"
-                                    required>
-
+                                <label for="editPhoneInput"><i class="fas fa-phone"></i> Phone</label>
+                                <input type="text" id="editPhoneInput" placeholder="+639171234567" required>
                             </div>
-
-
                             <div class="profile-form-group">
-
-                                <label for="editGenderInput">
-
-                                    <i class="fas fa-venus-mars"></i>
-                                    Gender
-
-                                </label>
-
-                                <select
-                                    id="editGenderInput"
-                                    required>
-
-                                    <option value="MALE">
-                                        Male
-                                    </option>
-
-                                    <option value="FEMALE">
-                                        Female
-                                    </option>
-
-                                    <option value="OTHER">
-                                        Other
-                                    </option>
-
+                                <label for="editGenderInput"><i class="fas fa-venus-mars"></i> Gender</label>
+                                <select id="editGenderInput" required>
+                                    <option value="MALE">Male</option>
+                                    <option value="FEMALE">Female</option>
+                                    <option value="OTHER">Other</option>
                                 </select>
-
                             </div>
-
                         </div>
-
-
                         <div class="profile-form-group">
-
-                            <label for="editBirthdayInput">
-
-                                <i class="fas fa-cake-candles"></i>
-                                Birthday
-
-                            </label>
-
-                            <input
-                                type="date"
-                                id="editBirthdayInput"
-                                required>
-
+                            <label for="editBirthdayInput"><i class="fas fa-cake-candles"></i> Birthday</label>
+                            <input type="date" id="editBirthdayInput" required>
                         </div>
-
-
                         <div class="profile-form-group">
-
-                            <label for="editBioInput">
-
-                                <i class="fas fa-quote-left"></i>
-                                Bio
-
-                            </label>
-
-                            <textarea
-                                id="editBioInput"
-                                placeholder="Tell something about yourself...">
-                            </textarea>
-
+                            <label for="editBioInput"><i class="fas fa-quote-left"></i> Bio</label>
+                            <textarea id="editBioInput" placeholder="Tell something about yourself..."></textarea>
                         </div>
-
-
                         <div class="profile-form-actions">
-
-                            <button
-                                class="btn cancel"
-                                id="cancelProfileModal">
-
-                                Cancel
-
-                            </button>
-
-                            <button
-                                class="btn primary"
-                                id="saveProfileBtn">
-
-                                <i class="fas fa-check"></i>
-                                Save Changes
-
-                            </button>
-
+                            <button class="btn cancel" id="cancelProfileModal">Cancel</button>
+                            <button class="btn primary" id="saveProfileBtn"><i class="fas fa-check"></i> Save Changes</button>
                         </div>
-
                     </div>
-
                 </div>
-
             </div>
-
         </div>
-
     </div>
 
-
     <!-- ── Manage Class Modal ─────────────────────────────────────────────── -->
-
     <div class="modal" id="manageModal">
-
         <div class="modal-content manage-modal-content">
 
             <div class="manage-modal-header">
-
                 <div class="manage-header-title">
-
                     <i class="fas fa-layer-group"></i>
-
-                    <span id="manageClassName">
-                        Classroom
-                    </span>
-
+                    <span id="manageClassName">Classroom</span>
                 </div>
-
-                <button
-                    class="profile-modal-close"
-                    id="closeManageModal">
-
-                    &times;
-
-                </button>
-
+                <button class="profile-modal-close" id="closeManageModal">&times;</button>
             </div>
-
 
             <div class="manage-modal-body">
 
-
                 <!-- Stats -->
-
                 <div class="manage-stats-section">
-
-                    <p class="manage-section-label">
-                        Overview
-                    </p>
-
-
+                    <p class="manage-section-label">Overview</p>
                     <div class="manage-stats-grid">
-
-
                         <div class="stat-tile">
-
-                            <div class="stat-tile-icon students">
-
-                                <i class="fas fa-users"></i>
-
-                            </div>
-
+                            <div class="stat-tile-icon students"><i class="fas fa-users"></i></div>
                             <div class="stat-tile-data">
-
-                                <span
-                                    class="stat-tile-value"
-                                    id="statTotalStudents">
-
-                                    —
-
-                                </span>
-
-                                <span class="stat-tile-label">
-                                    Students
-                                </span>
-
+                                <span class="stat-tile-value" id="statTotalStudents">—</span>
+                                <span class="stat-tile-label">Students</span>
                             </div>
-
                         </div>
-
-
                         <div class="stat-tile">
-
-                            <div class="stat-tile-icon activities">
-
-                                <i class="fas fa-list-check"></i>
-
-                            </div>
-
+                            <div class="stat-tile-icon activities"><i class="fas fa-list-check"></i></div>
                             <div class="stat-tile-data">
-
-                                <span
-                                    class="stat-tile-value"
-                                    id="statTotalActivities">
-
-                                    —
-
-                                </span>
-
-                                <span class="stat-tile-label">
-                                    Total Activities
-                                </span>
-
+                                <span class="stat-tile-value" id="statTotalActivities">—</span>
+                                <span class="stat-tile-label">Total Activities</span>
                             </div>
-
                         </div>
-
-
                         <div class="stat-tile">
-
-                            <div class="stat-tile-icon active">
-
-                                <i class="fas fa-bolt"></i>
-
-                            </div>
-
+                            <div class="stat-tile-icon active"><i class="fas fa-bolt"></i></div>
                             <div class="stat-tile-data">
-
-                                <span
-                                    class="stat-tile-value"
-                                    id="statActiveActivities">
-
-                                    —
-
-                                </span>
-
-                                <span class="stat-tile-label">
-                                    Active Activies
-                                </span>
-
+                                <span class="stat-tile-value" id="statActiveActivities">—</span>
+                                <span class="stat-tile-label">Active Activies</span>
                             </div>
-
                         </div>
-
                     </div>
-
                 </div>
-
 
                 <!-- Edit Settings -->
-
                 <div class="manage-edit-section">
-
-                    <p class="manage-section-label">
-
-                        <i class="fas fa-pen-to-square"></i>
-                        Class Settings
-
-                    </p>
-
+                    <p class="manage-section-label"><i class="fas fa-pen-to-square"></i> Class Settings</p>
 
                     <div>
-
-                        <label for="manageNameInput">
-                            Class Name *
-                        </label>
-
-                        <input
-                            type="text"
-                            id="manageNameInput"
-                            placeholder="e.g., Computer Science 101">
-
+                        <label for="manageNameInput">Class Name *</label>
+                        <input type="text" id="manageNameInput" placeholder="e.g., Computer Science 101">
                     </div>
-
 
                     <div>
-
-                        <label for="manageDescInput">
-                            Description
-                        </label>
-
-                        <textarea
-                            id="manageDescInput"
-                            placeholder="Brief description (optional)">
-                        </textarea>
-
+                        <label for="manageDescInput">Description</label>
+                        <textarea id="manageDescInput" placeholder="Brief description (optional)"></textarea>
                     </div>
-
 
                     <div>
-
-                        <label for="manageMaxInput">
-                            Maximum Students *
-                        </label>
-
-                        <input
-                            type="number"
-                            id="manageMaxInput"
-                            min="1"
-                            max="100">
-
+                        <label for="manageMaxInput">Maximum Students *</label>
+                        <input type="number" id="manageMaxInput" min="1" max="100">
                     </div>
-
 
                     <div class="manage-form-actions">
-
-                        <button
-                            class="btn primary"
-                            id="saveManageBtn">
-
-                            <i class="fas fa-check"></i>
-                            Save Changes
-
-                        </button>
-
+                        <button class="btn primary" id="saveManageBtn"><i class="fas fa-check"></i> Save Changes</button>
                     </div>
-
 
                     <!-- Status Management -->
-
                     <div class="manage-status-section">
-
                         <div class="manage-status-header">
-
-                            <p class="manage-section-label">
-
-                                <i class="fas fa-sliders-h"></i>
-                                Classroom Status
-
-                            </p>
-
-                            <span
-                                class="manage-current-status"
-                                id="manageCurrentStatusBadge">
-
-                                Unknown
-
-                            </span>
-
+                            <p class="manage-section-label"><i class="fas fa-sliders-h"></i> Classroom Status</p>
+                            <span class="manage-current-status" id="manageCurrentStatusBadge">Unknown</span>
                         </div>
-
-
                         <div class="status-management-row">
-
                             <div class="status-action-copy">
-
-                                <strong>
-                                    Close classroom
-                                </strong>
-
-                                <small>
-                                    This action is irreversible and should be used only after the class is finished.
-                                </small>
-
+                                <strong>Close classroom</strong>
+                                <small>This action is irreversible and should be used only after the class is finished.</small>
                             </div>
-
-                            <button
-                                class="btn btn-status-update"
-                                id="updateStatusBtn">
-
-                                <i class="fas fa-lock"></i>
-                                Close Classroom
-
-                            </button>
-
+                            <button class="btn btn-status-update" id="updateStatusBtn"><i class="fas fa-lock"></i> Close Classroom</button>
                         </div>
-
-
-                        <div
-                            class="manage-status-close-warning"
-                            id="manageCloseStatusWarning">
-
+                        <div class="manage-status-close-warning" id="manageCloseStatusWarning">
                             <i class="fas fa-triangle-exclamation"></i>
-
                             Once closed, this classroom cannot be reopened from the dashboard.
-
                         </div>
-
                     </div>
-
                 </div>
-
 
                 <!-- Danger Zone -->
-
                 <div class="manage-danger-zone">
-
-                    <p class="manage-section-label manage-danger-label">
-
-                        <i class="fas fa-triangle-exclamation"></i>
-                        Danger Zone
-
-                    </p>
-
-
+                    <p class="manage-section-label manage-danger-label"><i class="fas fa-triangle-exclamation"></i> Danger Zone</p>
                     <div class="danger-zone-row">
-
                         <div class="danger-zone-info">
-
-                            <strong>
-                                Delete this classroom
-                            </strong>
-
-                            <small>
-                                Irreversible. All students and activity data will be permanently removed.
-                            </small>
-
+                            <strong>Delete this classroom</strong>
+                            <small>Irreversible. All students and activity data will be permanently removed.</small>
                         </div>
-
-
-                        <button
-                            class="btn btn-danger"
-                            id="deleteClassBtn">
-
-                            <i class="fas fa-trash-alt"></i>
-                            Delete
-
+                        <button class="btn btn-danger" id="deleteClassBtn">
+                            <i class="fas fa-trash-alt"></i> Delete
                         </button>
-
                     </div>
 
-
-                    <!-- Typed confirmation -->
-
-                    <div
-                        class="delete-confirm-box"
-                        id="deleteConfirmBox">
-
+                    <!-- Typed confirmation (hidden until Delete is clicked) -->
+                    <div class="delete-confirm-box" id="deleteConfirmBox">
                         <p class="delete-confirm-prompt">
-
                             Type or drag
-
-                            <strong
-                                id="deleteConfirmTarget"
-                                draggable="true"
-                                title="Drag this classroom name into the input below">
-                            </strong>
-
+                            <strong id="deleteConfirmTarget" draggable="true" title="Drag this classroom name into the input below"></strong>
                             into the field to confirm deletion:
-
                         </p>
-
-
-                        <input
-                            type="text"
-                            id="deleteConfirmInput"
-                            placeholder="Type classroom name here"
-                            autocomplete="off">
-
-
+                        <input type="text" id="deleteConfirmInput" placeholder="Type classroom name here" autocomplete="off">
                         <div class="delete-confirm-actions">
-
-                            <button
-                                class="btn cancel"
-                                id="cancelDeleteBtn">
-
-                                Cancel
-
+                            <button class="btn cancel" id="cancelDeleteBtn">Cancel</button>
+                            <button class="btn btn-danger" id="confirmDeleteBtn" disabled>
+                                <i class="fas fa-trash-alt"></i> Yes, delete permanently
                             </button>
-
-                            <button
-                                class="btn btn-danger"
-                                id="confirmDeleteBtn"
-                                disabled>
-
-                                <i class="fas fa-trash-alt"></i>
-                                Yes, delete permanently
-
-                            </button>
-
                         </div>
-
                     </div>
-
                 </div>
 
             </div>
+        </div>
+    </div>
+   <div class="modal" id="tutorialModal">
+    <div class="modal-content profile-modal-content">
 
+        <div class="profile-modal-header">
+            <h2><i class="fas fa-book"></i>Guides/Tutorials</h2>
+            <button class="profile-modal-close" id="closeTutorialModal">&times;</button>
+        </div>
+        
+        <div class="tutorial-container">
+            <div class="tutorial-card" id="gitTutorialCard">
+    <img src="/frontend/asset/gitbash.png">
+    <h4>Git Bash Tutorial</h4>
+    <p>Click to learn step-by-step</p>
+</div>
+
+<div class="tutorial-card" id="createClassTutorialCard">
+    <i class="fas fa-plus-circle tutorial-icon"></i>
+    <h4>Create Classroom</h4>
+    <p>Learn how to create a class</p>
+</div>
+
+<div class="tutorial-card" id="joinClassTutorialCard">
+    <i class="fas fa-sign-in-alt tutorial-icon"></i>
+    <h4>Join Classroom</h4>
+    <p>Learn how to join a class</p>
+</div>
+        </div>     
+    </div>
+    </div>
+    
+<div class="modal" id="helpModal">
+    <div class="modal-content">
+        <div class="profile-modal-header">
+            <div class="title-container">
+        <h2><i class="fab fa-github"></i> Git Tutorial</h2>
+        <p class="modal-subtitle">Follow these steps to use Git version control to submit your activity.</p>
+    </div>
+            <button class="profile-modal-close" id="closeHelpModal">&times;</button>
+        </div>
+        
+        <div class="tutorial-step">
+            <p><b>Step 1:</b> Open the folder where your project is located.</p>
+            <img src="/frontend/asset/step1.png" alt="Open Folder" class="tutorial-step-img">
         </div>
 
-    </div>
-
-
-    <!-- ── Tutorial Modal ─────────────────────────────────────────────────── -->
-
-    <div class="modal" id="tutorialModal">
-
-        <div class="modal-content profile-modal-content">
-
-            <div class="profile-modal-header">
-
-                <h2>
-
-                    <i class="fas fa-book"></i>
-                    Guides/Tutorials
-
-                </h2>
-
-                <button
-                    class="profile-modal-close"
-                    id="closeTutorialModal">
-
-                    &times;
-
-                </button>
-
-            </div>
-
-
-            <div class="tutorial-container">
-
-
-                <div
-                    class="tutorial-card"
-                    id="gitTutorialCard">
-
-                    <img
-                        src="/frontend/asset/gitbash.png"
-                        alt="Git Bash">
-
-                    <h4>
-                        Git Bash Tutorial
-                    </h4>
-
-                    <p>
-                        Click to learn step-by-step
-                    </p>
-
-                </div>
-
-
-                <div
-                    class="tutorial-card"
-                    id="createClassTutorialCard">
-
-                    <i class="fas fa-plus-circle tutorial-icon"></i>
-
-                    <h4>
-                        Create Classroom
-                    </h4>
-
-                    <p>
-                        Learn how to create a class
-                    </p>
-
-                </div>
-
-
-                <div
-                    class="tutorial-card"
-                    id="joinClassTutorialCard">
-
-                    <i class="fas fa-sign-in-alt tutorial-icon"></i>
-
-                    <h4>
-                        Join Classroom
-                    </h4>
-
-                    <p>
-                        Learn how to join a class
-                    </p>
-
-                </div>
-
-            </div>
-
+        <!-- Step 1: Right click -->
+        <div class="tutorial-step">
+            <p><b>Step 2:</b> Right-click inside the folder.</p>
+            <img src="/frontend/asset/step8.png" alt="Right Click" class="tutorial-step-img">
         </div>
 
-    </div>
-
-
-    <!-- ── Git Tutorial ───────────────────────────────────────────────────── -->
-
-    <div class="modal" id="helpModal">
-
-        <div class="modal-content">
-
-            <div class="profile-modal-header">
-
-                <div class="title-container">
-
-                    <h2>
-
-                        <i class="fab fa-github"></i>
-                        Git Tutorial
-
-                    </h2>
-
-                    <p class="modal-subtitle">
-                        Follow these steps to use Git version control to submit your activity.
-                    </p>
-
-                </div>
-
-
-                <button
-                    class="profile-modal-close"
-                    id="closeHelpModal">
-
-                    &times;
-
-                </button>
-
-            </div>
-
-
-            <div class="tutorial-step">
-
-                <p>
-                    <b>Step 1:</b>
-                    Open the folder where your project is located.
-                </p>
-
-                <img
-                    src="/frontend/asset/step1.png"
-                    alt="Open Folder"
-                    class="tutorial-step-img">
-
-            </div>
-
-
-            <div class="tutorial-step">
-
-                <p>
-                    <b>Step 2:</b>
-                    Right-click inside the folder.
-                </p>
-
-                <img
-                    src="/frontend/asset/step8.png"
-                    alt="Right Click"
-                    class="tutorial-step-img">
-
-            </div>
-
-
-            <div class="tutorial-step">
-
-                <p>
-
-                    <b>Step 3:</b>
-
-                    Click
-
-                    <em>
-                        Show more options
-                    </em>
-
-                    (if using Windows 11).
-
-                </p>
-
-                <img
-                    src="/frontend/asset/step2.png"
-                    alt="Show More Options"
-                    class="tutorial-step-img">
-
-            </div>
-
-
-            <div class="tutorial-step">
-
-                <p>
-
-                    <b>Step 4:</b>
-
-                    Click
-
-                    <em>
-                        Git Bash Here
-                    </em>
-
-                    to open the terminal.
-
-                </p>
-
-                <img
-                    src="/frontend/asset/step3.png"
-                    alt="Git Bash Here"
-                    class="tutorial-step-img">
-
-            </div>
-
-
-            <div class="tutorial-step">
-
-                <p>
-
-                    <b>Step 5:</b>
-
-                    Type
-
-                    <code>
-                        git add .
-                    </code>
-
-                </p>
-
-                <small>
-                    This adds all your changed files to the staging area (preparing them to be saved).
-                </small>
-
-                <img
-                    src="/frontend/asset/step4.png"
-                    alt="git add"
-                    class="tutorial-step-img">
-
-            </div>
-
-
-            <div class="tutorial-step">
-
-                <p>
-
-                    <b>Step 6:</b>
-
-                    Type
-
-                    <code>
-                        git commit -m "your message"
-                    </code>
-
-                </p>
-
-                <small>
-                    This saves your changes with a message describing what you did.
-                </small>
-
-                <img
-                    src="/frontend/asset/step5.png"
-                    alt="git commit"
-                    class="tutorial-step-img">
-
-            </div>
-
-
-            <div class="tutorial-step">
-
-                <p>
-
-                    <b>Step 7:</b>
-
-                    Type
-
-                    <code>
-                        git pull
-                    </code>
-
-                </p>
-
-                <small>
-                    This gets the latest updates from the repository (important before pushing).
-                </small>
-
-                <img
-                    src="/frontend/asset/step6.png"
-                    alt="git pull"
-                    class="tutorial-step-img">
-
-            </div>
-
-
-            <div class="tutorial-step">
-
-                <p>
-
-                    <b>Step 8:</b>
-
-                    Type
-
-                    <code>
-                        git push
-                    </code>
-
-                </p>
-
-                <small>
-                    This uploads your changes to GitHub.
-                </small>
-
-                <img
-                    src="/frontend/asset/step7.png"
-                    alt="git push"
-                    class="tutorial-step-img">
-
-            </div>
-
-
-            <div class="tutorial-step">
-
-                <p>
-
-                    <b>Tip:</b>
-
-                    Want to learn more about using Git and GitHub through Git Bash?
-
-                </p>
-
-                <small>
-
-                    Click the
-
-                    <b>
-
-                        <a
-                            class="learnmore"
-                            href="https://docs.github.com/get-started/using-git"
-                            target="_blank">
-
-                            Learn More
-
-                        </a>
-
-                    </b>
-
-                    button to explore a beginner-friendly guide that walks you through essential commands,
-                    version control basics, and how to manage your projects efficiently.
-
-                </small>
-
-            </div>
-
+        <!-- Step 2: Show more options -->
+        <div class="tutorial-step">
+            <p><b>Step 3:</b> Click <em>Show more options</em> (if using Windows 11).</p>
+            <img src="/frontend/asset/step2.png" alt="Show More Options" class="tutorial-step-img">
         </div>
 
-    </div>
-
-
-    <!-- ── Create Classroom Tutorial ──────────────────────────────────────── -->
-
-    <div
-        class="modal"
-        id="createClassHelpModal">
-
-        <div class="modal-content">
-
-            <div class="profile-modal-header">
-
-                <div class="title-container">
-
-                    <h2>
-
-                        <i class="fas fa-plus-circle tutorial-icons"></i>
-                        Create Classroom Guide
-
-                    </h2>
-
-                    <p class="modal-subtitle">
-                        Follow these steps to use Git version control to submit your activity.
-                    </p>
-
-                </div>
-
-
-                <button
-                    class="profile-modal-close"
-                    id="closeCreateClassHelp">
-
-                    &times;
-
-                </button>
-
-            </div>
-
-
-            <div class="tutorial-step">
-
-                <p>
-
-                    <b>Step 1:</b>
-
-                    Click "New Class".
-
-                </p>
-
-                <img
-                    src="/frontend/asset/cc4.png"
-                    alt="New Class"
-                    class="tutorial-step-img">
-
-            </div>
-
-
-            <div class="tutorial-step">
-
-                <p>
-
-                    <b>Step 2:</b>
-
-                    Fill up the class details.
-
-                </p>
-
-                <img
-                    src="/frontend/asset/cc1.png"
-                    alt="Class Details"
-                    class="tutorial-step-img">
-
-            </div>
-
-
-            <div class="tutorial-step">
-
-                <p>
-
-                    <b>Step 3:</b>
-
-                    Click the switch below the "Require Passcode"
-                    (Only if creating private room).
-
-                </p>
-
-                <img
-                    src="/frontend/asset/cc2.png"
-                    alt="Require Passcode"
-                    class="tutorial-step-img">
-
-            </div>
-
-
-            <div class="tutorial-step">
-
-                <p>
-
-                    <b>Step 4:</b>
-
-                    Click the switch below the "Require Approval"
-                    (Only if the creator wants to approve before letting some user get in).
-
-                </p>
-
-                <img
-                    src="/frontend/asset/cc3.png"
-                    alt="Require Approval"
-                    class="tutorial-step-img">
-
-            </div>
-
-
-            <div class="tutorial-step">
-
-                <p>
-
-                    <b>Step 5:</b>
-
-                    Click the "Create Class" to fully build to classroom.
-
-                </p>
-
-            </div>
-
+        <!-- Step 3: Open Git Bash -->
+        <div class="tutorial-step">
+            <p><b>Step 4:</b> Click <em>Git Bash Here</em> to open the terminal.</p>
+            <img src="/frontend/asset/step3.png" alt="Git Bash Here" class="tutorial-step-img">
         </div>
 
+        <!-- Step 4: git add -->
+        <div class="tutorial-step">
+    <p><b>Step 5:</b> Type <code>git add .</code></p>
+    <small>This adds all your changed files to the staging area (preparing them to be saved).</small>
+    <img src="/frontend/asset/step4.png" alt="git add" class="tutorial-step-img">
+</div>
+
+<div class="tutorial-step">
+    <p><b>Step 6:</b> Type <code>git commit -m "your message"</code></p>
+    <small>This saves your changes with a message describing what you did.</small>
+    <img src="/frontend/asset/step5.png" alt="git commit" class="tutorial-step-img">
+</div>
+
+<div class="tutorial-step">
+    <p><b>Step 7:</b> Type <code>git pull</code></p>
+    <small>This gets the latest updates from the repository (important before pushing).</small>
+    <img src="/frontend/asset/step6.png" alt="git pull" class="tutorial-step-img">
+</div>
+
+<div class="tutorial-step">
+    <p><b>Step 8:</b> Type <code>git push</code></p>
+    <small>This uploads your changes to GitHub.</small>
+    <img src="/frontend/asset/step7.png" alt="git push" class="tutorial-step-img">
+</div>
+
+<div class="tutorial-step">
+    <p><b>Tip:</b> Want to learn more about using Git and GitHub through Git Bash?</p>
+    <small>Click the <b><a class="learnmore" href="https://docs.github.com/get-started/using-git" target="_blank">
+  Learn More
+</a></b> button to explore a beginner-friendly guide that walks you through essential commands, version control basics, and how to manage your projects efficiently.</small>
+
+</div>
+
     </div>
-
-
-    <!-- ── Join Classroom Tutorial ────────────────────────────────────────── -->
-
-    <div
-        class="modal"
-        id="joinClassHelpModal">
-
-        <div class="modal-content">
-
-            <div class="profile-modal-header">
-
-                <div class="title-container">
-
-                    <h2>
-
-                        <i class="fas fa-sign-in-alt tutorial-icons"></i>
-                        Join Classroom Guide
-
-                    </h2>
-
-                    <p class="modal-subtitle">
-                        Follow these steps to use Git version control to submit your activity.
-                    </p>
-
-                </div>
-
-
-                <button
-                    class="profile-modal-close"
-                    id="closeJoinClassHelp">
-
-                    &times;
-
-                </button>
-
+</div>
+<div class="modal" id="createClassHelpModal">
+    <div class="modal-content">
+        <div class="profile-modal-header">              
+            <div class="title-container">       
+            <h2><i class="fas fa-plus-circle tutorial-icons"></i>Create Classroom Guide</h2>
+            <p class="modal-subtitle">Follow these steps to use Git version control to submit your activity.</p>
             </div>
-
-
-            <div class="tutorial-step">
-
-                <p>
-
-                    <b>Step 1:</b>
-
-                    Click "Join".
-
-                </p>
-
-                <img
-                    src="/frontend/asset/js1.png"
-                    alt="Join"
-                    class="tutorial-step-img">
-
-            </div>
-
-
-            <div class="tutorial-step">
-
-                <p>
-
-                    <b>Step 2:</b>
-
-                    Enter class code
-                    (Only if your joining private room).
-
-                </p>
-
-                <img
-                    src="/frontend/asset/js2.png"
-                    alt="Enter Class Code"
-                    class="tutorial-step-img">
-
-            </div>
-
-
-            <div class="tutorial-step">
-
-                <p>
-
-                    <b>Step 3:</b>
-
-                    Click "Join Class".
-
-                </p>
-
-            </div>
-
+            
+            <button class="profile-modal-close" id="closeCreateClassHelp">&times;</button>
         </div>
 
+        <div class="tutorial-step">
+            <p><b>Step 1:</b> Click "New Class".</p>
+            <img src="/frontend/asset/cc4.png" alt="git pull" class="tutorial-step-img">
+        </div>
+        <div class="tutorial-step">
+            <p><b>Step 2:</b> Fill up the class details.</p>
+            <img src="/frontend/asset/cc1.png" alt="git pull" class="tutorial-step-img">
+        </div>
+        <div class="tutorial-step">
+            <p><b>Step 3:</b> Click the switch below the "Require Passcode" (Only if creating private room).</p>
+            <img src="/frontend/asset/cc2.png" alt="git pull" class="tutorial-step-img">
+        </div>
+        <div class="tutorial-step">
+            <p><b>Step 4:</b> Click the switch below the "Require Approval" (Only if the creator wants to approve before letting some user get in).</p>
+            <img src="/frontend/asset/cc3.png" alt="git pull" class="tutorial-step-img">
+        </div>
+        <div class="tutorial-step">
+            <p><b>Step 5:</b> Click the "Create Class" to fully build to classroom.</p>
+        </div>
+        
     </div>
+</div>
 
-
-    <!-- ── Guides Floating Button ─────────────────────────────────────────── -->
-
-    <button
-        class="floating-dropdown-btn"
-        id="viewTutorialsBtn"
-        aria-label="Open tutorials">
-
-        <i class="fas fa-question"></i>
-
-    </button>
-
-
-    <!-- ── Image Preview Modal ────────────────────────────────────────────── -->
-
-    <div
-        class="image-preview"
-        id="imagePreview">
-
-        <span
-            class="close-preview"
-            id="closePreview">
-
-            &times;
-
-        </span>
-
-        <img
-            id="previewImg"
-            alt="Preview">
-
-    </div>
-
-
-    <!-- ══════════════════════════════════════════════════════════════════════
-         CODETRACKER AI CHATBOT
-         ══════════════════════════════════════════════════════════════════════ -->
-
-    <div id="chatbot-container">
-
-        <!-- Floating Chat Button -->
-
-        <button
-            id="chatbot-toggle"
-            type="button"
-            aria-label="Open CodeTracker Assistant">
-
-            <i class="fas fa-comment-dots"></i>
-
-        </button>
-
-
-        <!-- Chatbot Window -->
-
-        <div id="chatbot-window">
-
-            <!-- Chatbot Header -->
-
-            <div id="chatbot-header">
-
-                <div>
-
-                    <i class="fas fa-robot"></i>
-
-                    <span>
-                        CodeTracker Assistant
-                    </span>
-
-                </div>
-
-                <button
-                    id="chatbot-close"
-                    type="button"
-                    aria-label="Close CodeTracker Assistant">
-
-                    &times;
-
-                </button>
-
+<!-- ✅ Join Class Tutorial -->
+<div class="modal" id="joinClassHelpModal">
+    <div class="modal-content">
+        <div class="profile-modal-header">
+            <div class="title-container">
+            <h2><i class="fas fa-sign-in-alt tutorial-icons"></i>Join Classroom Guide</h2>
+            <p class="modal-subtitle">Follow these steps to use Git version control to submit your activity.</p>
             </div>
-
-
-            <!-- Messages -->
-
-            <div
-                id="chatbot-messages"
-                aria-live="polite">
-
-                <div class="bot-message">
-
-                    Hi! I'm the CodeTracker Assistant.
-                    How can I help you today?
-
-                </div>
-
-            </div>
-
-
-            <!-- Chat Input -->
-
-            <div id="chatbot-input-area">
-
-                <input
-                    type="text"
-                    id="chatbot-input"
-                    placeholder="Ask me something..."
-                    autocomplete="off"
-                    aria-label="Chat message">
-
-                <button
-                    id="chatbot-send"
-                    type="button">
-
-                    Send
-
-                </button>
-
-            </div>
-
+            <button class="profile-modal-close" id="closeJoinClassHelp">&times;</button>
         </div>
 
+        <div class="tutorial-step">
+            <p><b>Step 1:</b> Click "Join".</p>
+            <img src="/frontend/asset/js1.png" alt="git pull" class="tutorial-step-img">
+        </div>
+        <div class="tutorial-step">
+            <p><b>Step 2:</b> Enter class code (Only if your joining private room).</p>
+            <img src="/frontend/asset/js2.png" alt="git pull" class="tutorial-step-img">
+        </div>
+        <div class="tutorial-step">
+            <p><b>Step 3:</b> Click "Join Class".</p>
+        </div>
     </div>
-
-
-    <!-- ── Scripts ────────────────────────────────────────────────────────── -->
-
+</div>
+    <button class="floating-dropdown-btn" id="viewTutorialsBtn"> <i class="fas fa-question"></i></button> 
+    <!-- Image Preview Modal -->
+<div class="image-preview" id="imagePreview">
+    <span class="close-preview" id="closePreview">&times;</span>
+    <img id="previewImg">
+</div> 
     <script src="/frontend/script/api-client.js"></script>
-
     <script src="/frontend/script/dashboard.js"></script>
-
-    <!-- AI Chatbot JavaScript -->
     <script src="/frontend/script/chatbot.js"></script>
-
 </body>
-
 </html>

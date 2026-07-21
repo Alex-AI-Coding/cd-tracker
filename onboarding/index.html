@@ -3,121 +3,84 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Complete Your Profile — CodeTracker</title>
+    <title>Complete Your Profile - CodeTracker</title>
     <link rel="icon" type="image/png" href="/frontend/asset/git.png">
     <link rel="stylesheet" href="/frontend/css/onboarding.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   </head>
   <body>
-    <div class="wrapper">
-      <div class="brand">
-        <i class="fab fa-github"></i>
-        <span class="brand-name">CodeTracker</span>
-      </div>
+    <main class="onboarding-layout">
+      <aside class="onboarding-aside" aria-label="CodeTracker onboarding">
+        <div class="brand">
+          <img src="/frontend/asset/git.png" alt="" class="brand-mark">
+          <span class="brand-name">CodeTracker</span>
+        </div>
 
-      <h1 class="page-title">Complete your profile</h1>
-      <p class="page-sub">One-time setup — takes less than a minute.</p>
+        <div class="aside-copy">
+          <p class="eyebrow">Your developer workspace</p>
+          <h1>Set up the profile behind your progress.</h1>
+          <p>Keep your activity, milestones, and GitHub work connected in one place.</p>
+        </div>
 
-      <div class="alert" id="alert"></div>
-
-      <div class="card">
-        <form id="regForm" novalidate>
-          <!-- Personal -->
-          <div class="section">
-            <div class="section-label">Personal info</div>
-
-            <div class="grid-2">
-              <div class="fg">
-                <label>First Name <span class="req">*</span></label>
-                <input type="text" id="firstName" placeholder="John" />
-                <span class="err-text" id="firstNameErr">Required</span>
-              </div>
-              <div class="fg">
-                <label>Last Name <span class="req">*</span></label>
-                <input type="text" id="lastName" placeholder="Doe" />
-                <span class="err-text" id="lastNameErr">Required</span>
-              </div>
-            </div>
-
-            <div class="grid-2">
-              <div class="fg">
-                <label>Phone <span class="req">*</span></label>
-                <input
-                  type="tel"
-                  id="phoneNumber"
-                  placeholder="+1 555 000 0000"
-                />
-                <span class="err-text" id="phoneNumberErr">Required</span>
-              </div>
-              <div class="fg">
-                <label>Birthday <span class="req">*</span></label>
-                <input type="date" id="birthday" />
-                <span class="err-text" id="birthdayErr">Required</span>
-              </div>
-            </div>
-
-            <div class="fg">
-              <label>Gender <span class="req">*</span></label>
-              <select id="gender">
-                <option value="">Select gender</option>
-                <option value="MALE">Male</option>
-                <option value="FEMALE">Female</option>
-                <option value="OTHER">Other</option>
-                <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
-              </select>
-              <span class="err-text" id="genderErr">Required</span>
+        <div class="workspace-visual" aria-hidden="true">
+          <div class="visual-toolbar"><span></span><span></span><span></span><span class="visual-toolbar-label">profile.config</span></div>
+          <div class="visual-content">
+            <div class="visual-gutter"><span>01</span><span>02</span><span>03</span><span>04</span><span>05</span></div>
+            <div class="visual-code">
+              <div><b>const</b> profile = {</div>
+              <div class="indent">name: <em>"you"</em>,</div>
+              <div class="indent">status: <em>"building"</em>,</div>
+              <div class="indent">next: <em>"dashboard"</em></div>
+              <div>};</div>
             </div>
           </div>
+          <div class="visual-activity">
+            <span class="activity-label">Ready for your first milestone</span>
+            <div class="activity-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          </div>
+        </div>
+        <p class="aside-footer"><i class="fa-brands fa-github"></i> Connected securely with GitHub</p>
+      </aside>
 
-          <div class="divider"></div>
+      <section class="form-side" aria-labelledby="form-title">
+        <div class="form-container">
+          <header class="form-header">
+            <p class="eyebrow">Profile setup</p>
+            <h2 id="form-title">Tell us about yourself</h2>
+            <p>Your details help personalize your CodeTracker experience.</p>
+          </header>
+          <div class="alert" id="alert"></div>
 
-          <!-- Profile -->
-          <div class="section">
-            <div class="section-label">Profile</div>
+          <div class="form-panel">
+            <form id="regForm" novalidate>
+              <div class="section">
+                <div class="section-label">Personal info</div>
+                <div class="grid-2">
+                  <div class="fg"><label>First Name <span class="req">*</span></label><input type="text" id="firstName" placeholder="John" /><span class="err-text" id="firstNameErr">Required</span></div>
+                  <div class="fg"><label>Last Name <span class="req">*</span></label><input type="text" id="lastName" placeholder="Doe" /><span class="err-text" id="lastNameErr">Required</span></div>
+                </div>
+                <div class="fg"><label>Gender <span class="req">*</span></label><select id="gender"><option value="">Select gender</option><option value="MALE">Male</option><option value="FEMALE">Female</option><option value="OTHER">Other</option></select><span class="err-text" id="genderErr">Required</span></div>
+              </div>
 
-            <div class="fg">
-              <label>Profile Picture <span style="color: var(--muted); font-size: 10px">(optional)</span></label>
-              <div class="upload-zone" id="uploadZone">
-                <input type="file" id="profileFile" accept="image/*" />
-                <div class="avatar" id="avatar">👤</div>
-                <div class="upload-info">
-                  <div class="upload-title" id="uploadTitle">
-                    Click or drop to upload a photo
+              <div class="divider"></div>
+
+              <div class="section">
+                <div class="section-label">Profile picture <span class="optional">(optional)</span></div>
+                <div class="fg">
+                  <div class="upload-zone" id="uploadZone">
+                    <input type="file" id="profileFile" accept="image/*" />
+                    <div class="avatar" id="avatar"><i class="fa-regular fa-user"></i></div>
+                    <div class="upload-info"><div class="upload-title" id="uploadTitle">Click or drop to upload a photo</div><div class="upload-hint" id="uploadHint">PNG, JPG, GIF - max 5 MB</div><div class="upload-fname" id="uploadFname"></div></div>
                   </div>
-                  <div class="upload-hint" id="uploadHint">
-                    PNG, JPG, GIF — max 5 MB
-                  </div>
-                  <div class="upload-fname" id="uploadFname"></div>
+                  <span class="err-text" id="profileFileErr"></span>
                 </div>
               </div>
-              <span class="err-text" id="profileFileErr"
-                >Profile picture is required</span
-              >
-            </div>
-
-            <div class="fg">
-              <label
-                >Bio
-                <span style="color: var(--muted); font-size: 10px"
-                  >(optional)</span
-                ></label
-              >
-              <textarea
-                id="bio"
-                placeholder="Tell us about yourself…"
-              ></textarea>
-              <span class="err-text" id="bioErr"></span>
-            </div>
+              <button type="submit" class="btn" id="submitBtn"><span class="spinner" id="spinner"></span>Complete Profile</button>
+            </form>
           </div>
-
-          <button type="submit" class="btn" id="submitBtn">
-            <span class="spinner" id="spinner"></span>
-            Complete Profile
-          </button>
-        </form>
-      </div>
-    </div>
-
+        </div>
+      </section>
+    </main>
     <script src="/frontend/script/api-client.js"></script>
     <script src="/frontend/script/onboarding.js"></script>
   </body>

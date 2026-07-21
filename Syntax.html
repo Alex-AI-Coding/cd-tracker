@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>C/C++/Java/C#/JavaScript Code Analyzer | Student Review</title>
+  <title>Python/Java/C/C++ Code Analyzer | Student Review</title>
   <link rel="icon" type="image/png" href="https://github.githubassets.com/favicons/favicon.png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
@@ -717,7 +717,7 @@
         </span>
         <button type="button" class="supported-badge" id="supportedBadge" title="View supported language information">
           <i class="fas fa-circle-info"></i>
-          <span class="badge-text">Supported: C, C++, Java, C#, JavaScript</span>
+          <span class="badge-text">Supported: Python, Java, C, C++</span>
         </button>
       </div>
     </div>
@@ -764,7 +764,7 @@
   </div>
 
   <script>
-    const API_BASE_URL = "https://anayzer-production-48be.up.railway.app"   ;
+    const API_BASE_URL = "https://syntaxanalyzer-production.up.railway.app"   ;
     
     let currentAnalysisId = null;
     let pollingInterval = null;
@@ -1034,7 +1034,7 @@
     });
 
     document.getElementById('supportedBadge').addEventListener('click', () => {
-      showToast('Analysis is available for C, C++, Java, C#, and JavaScript source files.', 'info');
+      showToast('Analysis is available for Python, Java, C, and C++ source files.', 'info');
     });
 
     document.getElementById('fileSearch').addEventListener('input', (e) => renderFileList(e.target.value));

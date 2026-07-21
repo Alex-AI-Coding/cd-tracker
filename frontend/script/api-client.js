@@ -1,6 +1,6 @@
 
 (function attachApiClient(globalScope) {
-  const DEFAULT_API_BASE_URL = "http://localhost:8080/api";
+  const DEFAULT_API_BASE_URL = "https://codetracker-production-ab72.up.railway.app/api";
 
   function safeReadStorage(key) {
     try {
@@ -601,7 +601,7 @@
         method: "POST",
         headers: { Accept: "application/json" },
         body: createRegistrationFormData(payload, profileFile)
-      });
+      }, { retryOnRefresh: false });
     },
 
     getProfile() {

@@ -2037,8 +2037,9 @@ async function validateAndNavigateToAnalyzer(
     const languages = await response.json();
 
     // Define the supported language keywords and file extensions
-    const supportedLanguages = ["C", "C++", "Java", "JavaScript", "C#"];
+    const supportedLanguages = ["Python", "Java", "C++", "C"];
     const supportedExtensions = [
+      ".py",
       ".c",
       ".cpp",
       ".cc",
@@ -2046,8 +2047,6 @@ async function validateAndNavigateToAnalyzer(
       ".h",
       ".hpp",
       ".java",
-      ".js",
-      ".cs",
     ];
 
     // Check if any supported language is present
