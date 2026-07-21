@@ -114,10 +114,18 @@ uploadZone.addEventListener("drop", (event) => {
   updateFilePreview();
 });
 
+// Guards against a second /users/register firing while the post-success
+// redirect timeout is still pending (double-click, Enter key, impatient
+// re-click). Once true, it never resets to false unless the attempt
+// actually failed.
+let hasSubmitted = false;
+
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
+  if (hasSubmitted) return;
   if (!validateAll() || !validateFile()) return;
 
+  hasSubmitted = true;
   spinner.style.display = "inline-block";
   submitBtn.disabled = true;
   alertEl.className = "alert";
@@ -138,10 +146,15 @@ form.addEventListener("submit", async (event) => {
       showAlert("success", result.message || "Profile completed!");
       if (result.data) localStorage.setItem("userData", JSON.stringify(result.data));
       setTimeout(() => window.location.replace("/dashboard/"), 1200);
+      return;
     }
+
+    hasSubmitted = false;
+    spinner.style.display = "none";
+    submitBtn.disabled = false;
   } catch (error) {
+    hasSubmitted = false; // only allow retry after a genuine failure
     showAlert("error", error.message || "Registration failed. Try again.");
-  } finally {
     spinner.style.display = "none";
     submitBtn.disabled = false;
   }
