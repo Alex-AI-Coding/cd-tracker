@@ -12,7 +12,6 @@ const joinClassBtn         = document.getElementById('joinClassBtn');
 const searchClassBtn       = document.getElementById('searchClassBtn');
 const headerSearch         = document.getElementById('headerSearch');
 const classSearchInput     = document.getElementById('classSearchInput');
-const cancelClassSearchBtn = document.getElementById('cancelClassSearchBtn');
 const createModal          = document.getElementById('createModal');
 const joinModal            = document.getElementById('joinModal');
 const profileModal         = document.getElementById('profileModal');
@@ -562,14 +561,16 @@ function setupEventListeners() {
 
     // Header search
     searchClassBtn?.addEventListener('click', () => toggleHeaderSearch(true));
-    cancelClassSearchBtn?.addEventListener('click', () => toggleHeaderSearch(false));
     classSearchInput?.addEventListener('input', (e) => {
         classroomSearchTerm = normalizeSearchText(e.target.value);
+        syncHeaderSearchVisibility();
         renderClasses();
     });
     classSearchInput?.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            toggleHeaderSearch(false);
+            if (!normalizeSearchText(classSearchInput?.value)) {
+                toggleHeaderSearch(false);
+            }
         }
     });
 
@@ -699,8 +700,9 @@ function setupEventListeners() {
         const isDropdownClick = profileDropdown && profileDropdown.contains(e.target);
         const isSearchClick = headerSearch && headerSearch.contains(e.target);
         const isSearchButtonClick = searchClassBtn && searchClassBtn.contains(e.target);
+        const hasSearchText = Boolean(normalizeSearchText(classSearchInput?.value));
         
-        if (!isUserIconClick && !isDropdownClick && !isSearchClick && !isSearchButtonClick) {
+        if (!isUserIconClick && !isDropdownClick && !isSearchClick && !isSearchButtonClick && !hasSearchText) {
             closeProfileDropdown();
             toggleHeaderSearch(false);
         }
@@ -710,7 +712,16 @@ function setupEventListeners() {
 function toggleHeaderSearch(forceOpen = null) {
     if (!headerSearch || !searchClassBtn) return;
 
+    const hasSearchText = Boolean(normalizeSearchText(classSearchInput?.value));
     const shouldOpen = forceOpen === null ? !headerSearch.classList.contains('is-open') : forceOpen;
+    const canClose = !hasSearchText;
+
+    if (!shouldOpen && !canClose) {
+        headerSearch.classList.add('is-open');
+        searchClassBtn.setAttribute('aria-expanded', 'true');
+        return;
+    }
+
     headerSearch.classList.toggle('is-open', shouldOpen);
     searchClassBtn.setAttribute('aria-expanded', String(shouldOpen));
 
@@ -724,7 +735,16 @@ function toggleHeaderSearch(forceOpen = null) {
 function clearClassSearch() {
     classroomSearchTerm = '';
     if (classSearchInput) classSearchInput.value = '';
+    syncHeaderSearchVisibility();
     renderClasses();
+}
+
+function syncHeaderSearchVisibility() {
+    if (!headerSearch || !searchClassBtn) return;
+    const hasSearchText = Boolean(normalizeSearchText(classSearchInput?.value));
+    const shouldBeOpen = hasSearchText || headerSearch.classList.contains('is-open');
+    headerSearch.classList.toggle('is-open', shouldBeOpen);
+    searchClassBtn.setAttribute('aria-expanded', String(shouldBeOpen));
 }
 
 function getFilteredClasses(classes = []) {
