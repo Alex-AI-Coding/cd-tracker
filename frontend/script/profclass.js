@@ -594,6 +594,14 @@ function normalizeSubmittedEntry(entry, fallback) {
   };
 }
 
+function isLateSubmission(row, activity) {
+  const submittedAt = parseApiDate(row?.submittedAt || row?.updatedAt || row?.createdAt);
+  const dueDate = parseApiDate(activity?.dueDate);
+
+  if (!submittedAt || !dueDate) return false;
+  return submittedAt.getTime() > dueDate.getTime();
+}
+
 function isEntryNewer(next, current) {
   const nextTimestamp = getSubmissionTimestamp(next);
   const currentTimestamp = getSubmissionTimestamp(current);
@@ -988,14 +996,24 @@ function renderSubmissionsModal() {
     PENDING: 0,
     SUBMITTED: 0,
     GRADED: 0,
+    LATE: 0,
   };
 
   state.currentSubmissionRows.forEach((row) => {
     counts[row.status] = (counts[row.status] || 0) + 1;
   });
 
+  const activityDueDate = activity?.dueDate;
+  if (activityDueDate) {
+    state.currentSubmissionRows.forEach((row) => {
+      if (isLateSubmission(row, activity)) {
+        counts.LATE += 1;
+      }
+    });
+  }
+
   if (subtitleEl) {
-    subtitleEl.textContent = `PENDING: ${counts.PENDING} | SUBMITTED: ${counts.SUBMITTED} | GRADED: ${counts.GRADED}`;
+    subtitleEl.textContent = `PENDING: ${counts.PENDING} | SUBMITTED: ${counts.SUBMITTED} | GRADED: ${counts.GRADED} | LATE: ${counts.LATE}`;
   }
 
   renderSubmissionRows();
@@ -1005,6 +1023,9 @@ function renderSubmissionRows() {
   const container = document.getElementById("submissionsList");
   if (!container) return;
 
+  const activity = state.activities.find(
+    (item) => getActivityId(item) === state.currentSubmissionsActivityId,
+  );
   const filter = state.submissionFilter;
   const rows = state.currentSubmissionRows.filter(
     (row) => filter === "ALL" || row.status === filter,
@@ -1022,6 +1043,7 @@ function renderSubmissionRows() {
 
   container.innerHTML = rows
     .map((row) => {
+      const lateSubmission = isLateSubmission(row, activity);
       const initials = getInitials(row.displayName, "ST");
       const avatar = row.profileUrl
         ? `<img src="${escapeHtml(row.profileUrl)}" alt="${escapeHtml(row.displayName)}">`
@@ -1087,6 +1109,7 @@ function renderSubmissionRows() {
                     <div>
                         <span class="field-label">Status</span>
                         <span class="status-pill ${statusClass(row.status)}">${escapeHtml(row.status)}</span>
+                        ${lateSubmission ? '<span class="status-pill late"><i class="fas fa-triangle-exclamation"></i> LATE SUBMISSION</span>' : ""}
                     </div>
                     <div>
                         <span class="field-label">Repository</span>
@@ -1122,6 +1145,7 @@ function openSubmissionDetailModal(activityId, studentUserId) {
       ? formatDateTime(row.updatedAt)
       : "N/A";
   const status = row.status || "UNKNOWN";
+  const lateSubmission = isLateSubmission(row, activity);
 
   const title = row.title || getActivityTitle(activity);
   const repositoryLabel = row.repositoryUrl
@@ -1152,7 +1176,10 @@ function openSubmissionDetailModal(activityId, studentUserId) {
                         <div class="detail-name">${escapeHtml(row.displayName)}</div>
                     </div>
                 </div>
-                <span class="status-pill ${statusClass(status)}">${escapeHtml(status)}</span>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+                    <span class="status-pill ${statusClass(status)}">${escapeHtml(status)}</span>
+                    ${lateSubmission ? '<span class="status-pill late"><i class="fas fa-triangle-exclamation"></i> LATE SUBMISSION</span>' : ""}
+                </div>
             </header>
 
             <section class="detail-section">
@@ -1176,6 +1203,15 @@ function openSubmissionDetailModal(activityId, studentUserId) {
                         <span class="field-label">Submission Status</span>
                         <span>${escapeHtml(status)}</span>
                     </div>
+                    ${
+                      lateSubmission
+                        ? `
+                    <div>
+                        <span class="field-label">Timing</span>
+                        <span class="status-pill late">Late submission</span>
+                    </div>`
+                        : ""
+                    }
                     ${
                       row.score != null
                         ? `
