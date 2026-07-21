@@ -3,7 +3,7 @@ const DEFAULT_API_BASE_URL = "https://codetracker-production-ab72.up.railway.app
 
 function normalizeBaseUrl(value) {
   return String(value || "").trim().replace(/\/+$/, "");
-} 
+}
 
 function readApiBaseUrl() {
   const fromClient = window.ApiClient?.baseUrl;
