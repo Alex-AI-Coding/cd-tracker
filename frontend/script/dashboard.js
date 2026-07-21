@@ -12,6 +12,7 @@ const joinClassBtn         = document.getElementById('joinClassBtn');
 const searchClassBtn       = document.getElementById('searchClassBtn');
 const headerSearch         = document.getElementById('headerSearch');
 const classSearchInput     = document.getElementById('classSearchInput');
+const cancelClassSearchBtn = document.getElementById('cancelClassSearchBtn');
 const createModal          = document.getElementById('createModal');
 const joinModal            = document.getElementById('joinModal');
 const profileModal         = document.getElementById('profileModal');
@@ -561,13 +562,13 @@ function setupEventListeners() {
 
     // Header search
     searchClassBtn?.addEventListener('click', () => toggleHeaderSearch(true));
+    cancelClassSearchBtn?.addEventListener('click', () => toggleHeaderSearch(false));
     classSearchInput?.addEventListener('input', (e) => {
         classroomSearchTerm = normalizeSearchText(e.target.value);
         renderClasses();
     });
     classSearchInput?.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            clearClassSearch();
             toggleHeaderSearch(false);
         }
     });

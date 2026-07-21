@@ -147,6 +147,27 @@ html {
         color: #8b949e;
     }
 
+    #cancelClassSearchBtn {
+        width: 24px;
+        height: 24px;
+        border: none;
+        border-radius: 999px;
+        background: rgba(139, 148, 158, 0.12);
+        color: #c9d1d9;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+    }
+
+    #cancelClassSearchBtn:hover {
+        background: rgba(248, 81, 73, 0.15);
+        color: #f85149;
+        transform: scale(1.03);
+    }
+
     /* ── Buttons ──────────────────────────────────────────────────── */
     .btn {
         padding: 6px 14px;
