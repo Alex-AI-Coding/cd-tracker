@@ -252,7 +252,8 @@ function unwrap(val) {
 function resolveClassroomId(classroom) {
     if (!classroom || typeof classroom !== 'object') return '';
 
-    const looksLikeClassroomId = (value) => /^cl-/i.test(value);
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const looksLikeClassroomId = (value) => UUID_RE.test(value);
     const looksLikeUserId = (value) => /^usr-/i.test(value) || /^@t-/i.test(value);
     const normalize = (candidate, requireClassPrefix = true) => {
         const value = String(unwrap(candidate) || '').trim();
@@ -1559,7 +1560,8 @@ async function fetchClassroomStats(classId) {
         if (!classId || classId === 'unknown') {
             throw new Error('Missing classroom ID for stats request');
         }
-        if (!/^cl-/i.test(classId)) {
+        const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (!UUID_RE.test(classId)) {
             throw new Error(`Invalid classroom ID received: ${classId}`);
         }
 
