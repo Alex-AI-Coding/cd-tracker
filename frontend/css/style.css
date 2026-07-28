@@ -35,6 +35,7 @@ body {
 .login-page {
   display: flex;
   min-height: 100vh;
+  min-width: 0;
 }
 
 /* ── Left brand panel ────────────────────────────────────────────── */
@@ -46,6 +47,7 @@ body {
   justify-content: center;
   padding: 64px 56px;
   border-right: 1px solid #21262d;
+  min-width: 0;
 }
 
 .brand-inner { max-width: 560px; }
@@ -202,17 +204,20 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 0;
+  min-height: 100vh;
   padding: 64px 40px;
 }
 
 .login-box {
   width: 100%;
-  max-width: 520px;
+  max-width: min(520px, calc(100vw - 80px));
   background: #161b22;
   border: 1px solid #30363d;
   border-radius: 14px;
   padding: 50px 44px;
   text-align: center;
+  margin: auto;
 }
 
 .login-box h2 {
@@ -340,6 +345,19 @@ body {
   .login-box h2 { font-size: 30px; }
 
   .login-sub { font-size: 16px; }
+}
+
+@media (max-height: 820px) and (min-width: 901px) {
+  .login-container {
+    min-height: auto;
+    padding-top: 40px;
+    padding-bottom: 40px;
+  }
+
+  .login-box {
+    padding-top: 40px;
+    padding-bottom: 40px;
+  }
 }
 
 /* ✅ Large phones */
