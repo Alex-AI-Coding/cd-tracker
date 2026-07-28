@@ -2,6 +2,8 @@
    CODETRACKER AI CHATBOT
    ========================= */
 
+html { zoom: 1.25; }
+
 #chatbot-container {
     position: fixed;
     bottom: 100px;

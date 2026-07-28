@@ -3,7 +3,8 @@
 }
 
 html {
-    overflow-x: hidden;
+  overflow-x: hidden;
+  zoom: 1.25;
 }
 /* ── Reset & Base ────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

@@ -25,6 +25,7 @@ input, textarea, select, [contenteditable="true"] {
 html {
   overflow-x: hidden;
   scroll-behavior: smooth;
+  zoom: 1.25;
 }
 
 :root {
