@@ -29,6 +29,7 @@ html {
         color: #c9d1d9;
         min-height: 100vh;
         min-width: 320px;
+        font-size: 16px;
     }
 
     ::-webkit-scrollbar       { width: 5px; height: 5px; }
@@ -298,7 +299,7 @@ html {
         border: none;
         color: #9aa6b2;
         cursor: pointer;
-        font-size: 13px;
+        font-size: 15px;
         font-weight: 600;
         border-radius: 8px;
         transition: all 0.18s ease;
@@ -320,10 +321,10 @@ html {
         color: #8ec5ff;
         padding: 0 7px;
         border-radius: 999px;
-        font-size: 11px;
+        font-size: 13px;
         font-weight: 600;
-        line-height: 20px;
-        min-width: 20px;
+        line-height: 22px;
+        min-width: 22px;
         text-align: center;
     }
     .tab-button.active .tab-count { background: #58a6ff; color: #06121f; }
@@ -545,15 +546,15 @@ html {
         transform: scale(1);
     }
 
-    .modal-content h2      { color: #e6edf3; margin-bottom: 3px; font-size: 17px; font-weight: 700; }
-    .modal-content .shems  { color: #8b949e; margin-bottom: 16px; font-size: 12px; }
-    .modal-subtitle        { color: #8b949e; margin-bottom: 16px; font-size: 12px; }
+    .modal-content h2      { color: #e6edf3; margin-bottom: 3px; font-size: 19px; font-weight: 700; }
+    .modal-content .shems  { color: #8b949e; margin-bottom: 16px; font-size: 14px; }
+    .modal-subtitle        { color: #8b949e; margin-bottom: 16px; font-size: 14px; }
     .modal-content > div   { margin-bottom: 12px; }
 
     .modal-content label {
         display: block;
         color: #c9d1d9;
-        font-size: 12px;
+        font-size: 14px;
         font-weight: 500;
         margin-bottom: 4px;
     }
@@ -571,7 +572,7 @@ html {
         border: 1px solid #30363d;
         border-radius: 6px;
         color: #c9d1d9;
-        font-size: 13px;
+        font-size: 15px;
         font-family: 'Poppins', sans-serif;
         transition: border-color 0.12s;
     }
@@ -584,7 +585,7 @@ html {
     }
 
     .modal-content textarea { min-height: 60px; resize: vertical; }
-    .field-hint { display: block; color: #484f58; font-size: 10px; margin-top: 3px; }
+    .field-hint { display: block; color: #484f58; font-size: 12px; margin-top: 3px; }
 
     /* ── Status Dropdown ──────────────────────────────────────────── */
     .status-dropdown-wrapper {
@@ -1154,7 +1155,7 @@ html {
         display: flex;
         align-items: center;
         gap: 8px;
-        font-size: 15px;
+        font-size: 17px;
         font-weight: 600;
         color: #e6edf3;
     }
@@ -1170,7 +1171,7 @@ html {
 
     /* ── Section label ────────────────────────────────────────────── */
     .manage-section-label {
-        font-size: 10px;
+        font-size: 12px;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.7px;
@@ -1218,13 +1219,13 @@ html {
 
     .stat-tile-data { display: flex; flex-direction: column; }
     .stat-tile-value {
-        font-size: 20px;
+        font-size: 22px;
         font-weight: 700;
         color: #e6edf3;
         line-height: 1;
     }
     .stat-tile-label {
-        font-size: 10px;
+        font-size: 12px;
         color: #8b949e;
         margin-top: 3px;
     }
@@ -1246,7 +1247,7 @@ html {
         padding-top: 4px;
     }
     .manage-form-actions .btn {
-        font-size: 12px;
+        font-size: 14px;
         padding: 6px 14px;
         display: flex;
         align-items: center;
@@ -1698,7 +1699,7 @@ html {
         justify-content: center;
         white-space: nowrap;
         padding: 8px 10px;
-        font-size: 12px;
+        font-size: 14px;
     }
 
     .classroom-grid { 
@@ -1753,7 +1754,7 @@ html {
         padding: 12px 14px;
     }
     .profile-modal-header h2 {
-        font-size: 14px;
+        font-size: 16px;
     }
     .profile-modal-body {
         padding: 0;
@@ -1885,7 +1886,7 @@ html {
         padding: 10px;
     }
     .profile-modal-header h2 {
-        font-size: 13px;
+        font-size: 15px;
     }
     .profile-picture-wrapper,
     .profile-picture-large {

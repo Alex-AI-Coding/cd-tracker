@@ -24,7 +24,7 @@ body {
   background: #0d1117;
   color: #c9d1d9;
   min-height: 100vh;
-  font-size: 17px;
+  font-size: 19px;
   min-width: 320px;
   /* ✅ Stop random horizontal scroll on all devices */
   overflow-x: hidden;
@@ -336,19 +336,19 @@ body {
     padding: 40px 32px;
   }
 
-  .login-box h2 { font-size: 28px; }
+  .login-box h2 { font-size: 30px; }
 
   .login-sub { font-size: 16px; }
 }
 
 /* ✅ Large phones */
 @media (max-width: 620px) {
-    .brand-heading { font-size: 32px; }
+    .brand-heading { font-size: 34px; }
 
-    .brand-sub { font-size: 15px; }
+    .brand-sub { font-size: 17px; }
 
     .note-body-inner p {
-        font-size: 15px;
+        font-size: 17px;
     }
 
     .login-box {
@@ -371,15 +371,15 @@ body {
   }
   .brand-logo i { font-size: 26px; }
 
-  .brand-heading { font-size: 28px; }
-  .brand-sub { font-size: 14px; }
+  .brand-heading { font-size: 30px; }
+  .brand-sub { font-size: 16px; }
 
   .feature-list li {
-    font-size: 15px;
+    font-size: 17px;
   }
 
-  .note-title { font-size: 14px; }
-  .note-body-inner p { font-size: 14px; }
+  .note-title { font-size: 16px; }
+  .note-body-inner p { font-size: 16px; }
 
   .login-container { padding: 32px 16px; }
 
@@ -388,18 +388,18 @@ body {
     border-radius: 12px;
   }
 
-  .login-box h2 { font-size: 24px; }
-  .login-sub { font-size: 14px; }
+  .login-box h2 { font-size: 26px; }
+  .login-sub { font-size: 16px; }
 
   .github-btn {
       width: 100%;
-      font-size: 14px;
+      font-size: 16px;
       padding: 12px 14px;
       min-height: 48px;
   }
 
   .below {
-      font-size: 13px;
+      font-size: 15px;
   }
 }
 
