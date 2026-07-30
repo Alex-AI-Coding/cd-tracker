@@ -52,6 +52,10 @@
                         <i class="fas fa-bullhorn"></i>
                         Announcement
                     </h2>
+                    <button class="announcement-view-btn" id="viewAnnouncementsBtn" type="button">
+                        <i class="fas fa-list"></i>
+                        View Posted
+                    </button>
                 </div>
                 <form id="announcementForm" class="announcement-form">
                     <div class="form-group">
@@ -80,6 +84,29 @@
                         </button>
                     </div>
                 </form>
+            </div>
+
+            <div class="modal" id="announcementsModal">
+                <div class="modal-content announcement-modal-content">
+                    <div class="modal-header">
+                        <h2>
+                            <i class="fas fa-bullhorn"></i>
+                            Posted Announcements
+                        </h2>
+                        <button class="close-btn" id="closeAnnouncementsModalBtn" data-close-modal="announcementsModal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="announcementsList" class="announcements-list">
+                            <div class="empty-state compact">
+                                <i class="fas fa-bullhorn"></i>
+                                <p>No announcements posted yet.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" id="closeAnnouncementsBtn" data-close-modal="announcementsModal">Close</button>
+                    </div>
+                </div>
             </div>
 
             <div class="section">

@@ -886,6 +886,97 @@ body.modal-open {
     justify-content: flex-end;
 }
 
+.announcement-view-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    background: #0d1117;
+    color: #c9d1d9;
+    padding: 7px 10px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.announcement-view-btn:hover {
+    border-color: #58a6ff;
+    color: #58a6ff;
+}
+
+.announcement-modal-content {
+    width: 760px;
+    max-width: 96%;
+}
+
+.announcements-list {
+    display: grid;
+    gap: 10px;
+}
+
+.announcement-item {
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    background: #0d1117;
+    padding: 12px;
+    display: grid;
+    gap: 8px;
+}
+
+.announcement-item-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+}
+
+.announcement-item-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #e6edf3;
+    font-weight: 600;
+}
+
+.announcement-item-title i {
+    color: #58a6ff;
+}
+
+.announcement-item-time {
+    color: #8b949e;
+    font-size: 11px;
+}
+
+.announcement-item-message {
+    color: #c9d1d9;
+    white-space: pre-wrap;
+    line-height: 1.5;
+}
+
+.announcement-item-attachments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.announcement-attachment-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid #30363d;
+    background: #161b22;
+    color: #c9d1d9;
+    text-decoration: none;
+    font-size: 12px;
+}
+
+.announcement-attachment-link:hover {
+    border-color: #58a6ff;
+    color: #58a6ff;
+}
+
 .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;

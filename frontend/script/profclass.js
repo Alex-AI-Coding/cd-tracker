@@ -39,6 +39,7 @@ const ANNOUNCEMENT_ALLOWED_EXTENSIONS = new Set([
   "aac",
   "pdf",
 ]);
+const ANNOUNCEMENT_CACHE_PREFIX = "ct_announcements_";
 
 const state = {
   classroomId: null,
@@ -128,6 +129,8 @@ function setupEventListeners() {
   const announcementAttachments = document.getElementById(
     "announcementAttachments",
   );
+  const viewAnnouncementsBtn = document.getElementById("viewAnnouncementsBtn");
+  const announcementsModal = document.getElementById("announcementsModal");
 
   if (createBtn) {
     createBtn.addEventListener("click", () => {
@@ -233,6 +236,21 @@ function setupEventListeners() {
     announcementForm.addEventListener("submit", async (event) => {
       event.preventDefault();
       await handleCreateAnnouncement();
+    });
+  }
+
+  if (viewAnnouncementsBtn) {
+    viewAnnouncementsBtn.addEventListener("click", async () => {
+      openModal("announcementsModal");
+      await loadAnnouncements();
+    });
+  }
+
+  if (announcementsModal) {
+    announcementsModal.addEventListener("click", (event) => {
+      if (event.target === announcementsModal) {
+        closeModal("announcementsModal");
+      }
     });
   }
 
@@ -1616,7 +1634,7 @@ async function handleCreateAnnouncement() {
   }
 
   try {
-    await window.ApiClient.classroom.createAnnouncement(
+    const result = await window.ApiClient.classroom.createAnnouncement(
       state.classroomId,
       { message },
       attachments,
@@ -1625,6 +1643,8 @@ async function handleCreateAnnouncement() {
     document.getElementById("announcementForm")?.reset();
     updateAnnouncementCharCount();
     renderAnnouncementAttachmentList([]);
+    cacheAnnouncement(state.classroomId, normalizeAnnouncementResponse(result));
+    await loadAnnouncements(true);
     showNotification("Announcement posted successfully.", "success");
   } catch (error) {
     console.error("Failed to create announcement:", error);
@@ -1635,6 +1655,37 @@ async function handleCreateAnnouncement() {
       button.innerHTML = '<i class="fas fa-paper-plane"></i> Post Announcement';
     }
   }
+}
+
+async function loadAnnouncements(silent = false) {
+  const container = document.getElementById("announcementsList");
+  if (!container) return [];
+
+  if (!silent) {
+    container.innerHTML = `
+      <div class="empty-state compact">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Loading announcements...</p>
+      </div>`;
+  }
+
+  let announcements = [];
+  try {
+    const result = await window.ApiClient?.classroom?.listAnnouncements?.(state.classroomId);
+    announcements = normalizeAnnouncementCollection(result);
+    if (announcements.length) {
+      cacheAnnouncements(state.classroomId, announcements);
+    }
+  } catch (_) {
+    announcements = readCachedAnnouncements(state.classroomId);
+  }
+
+  if (!announcements.length) {
+    announcements = readCachedAnnouncements(state.classroomId);
+  }
+
+  renderAnnouncements(container, announcements);
+  return announcements;
 }
 
 function openEditActivityModal(activityId) {
@@ -1942,6 +1993,124 @@ function renderAnnouncementAttachmentList(files) {
       `;
     })
     .join("");
+}
+
+function normalizeAnnouncementCollection(result) {
+  if (Array.isArray(result)) return result.map(normalizeAnnouncement).filter(Boolean);
+  if (Array.isArray(result?.data)) return result.data.map(normalizeAnnouncement).filter(Boolean);
+  if (Array.isArray(result?.content)) return result.content.map(normalizeAnnouncement).filter(Boolean);
+  if (Array.isArray(result?.items)) return result.items.map(normalizeAnnouncement).filter(Boolean);
+  if (result && typeof result === "object" && result.announcementId) return [normalizeAnnouncement(result)].filter(Boolean);
+  return [];
+}
+
+function normalizeAnnouncementResponse(result) {
+  return normalizeAnnouncementCollection(result)[0] || null;
+}
+
+function normalizeAnnouncement(item) {
+  if (!item || typeof item !== "object") return null;
+  return {
+    announcementId: asString(item.announcementId),
+    message: asString(item.message),
+    createdAt: asString(item.createdAt),
+    attachments: Array.isArray(item.attachments)
+      ? item.attachments.map(normalizeAttachment).filter(Boolean)
+      : [],
+  };
+}
+
+function normalizeAttachment(item) {
+  if (!item || typeof item !== "object") return null;
+  return {
+    attachmentId: asString(item.attachmentId),
+    url: asString(item.url),
+    type: asString(item.type),
+    resourceType: asString(item.resourceType),
+  };
+}
+
+function cacheKeyForClassroom(classroomId) {
+  return `${ANNOUNCEMENT_CACHE_PREFIX}${asString(classroomId)}`;
+}
+
+function readCachedAnnouncements(classroomId) {
+  try {
+    const raw = localStorage.getItem(cacheKeyForClassroom(classroomId));
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.map(normalizeAnnouncement).filter(Boolean) : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function cacheAnnouncements(classroomId, announcements) {
+  try {
+    localStorage.setItem(cacheKeyForClassroom(classroomId), JSON.stringify(announcements || []));
+  } catch (_) {}
+}
+
+function cacheAnnouncement(classroomId, announcement) {
+  if (!announcement) return;
+  const current = readCachedAnnouncements(classroomId);
+  const next = [announcement, ...current.filter((item) => item.announcementId !== announcement.announcementId)];
+  cacheAnnouncements(classroomId, next);
+}
+
+function renderAnnouncements(container, announcements) {
+  if (!announcements.length) {
+    container.innerHTML = `
+      <div class="empty-state compact">
+        <i class="fas fa-bullhorn"></i>
+        <p>No announcements posted yet.</p>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = announcements.map((announcement) => {
+    const attachments = Array.isArray(announcement.attachments) ? announcement.attachments : [];
+    return `
+      <article class="announcement-item">
+        <div class="announcement-item-head">
+          <div class="announcement-item-title">
+            <i class="fas fa-bullhorn"></i>
+            <span>Announcement</span>
+          </div>
+          <span class="announcement-item-time">${escapeHtml(formatAnnouncementTime(announcement.createdAt))}</span>
+        </div>
+        <div class="announcement-item-message">${escapeHtml(announcement.message)}</div>
+        ${attachments.length ? `
+          <div class="announcement-item-attachments">
+            ${attachments.map((attachment) => `
+              <a class="announcement-attachment-link" href="${escapeHtml(attachment.url)}" target="_blank" rel="noopener noreferrer">
+                <i class="${escapeHtml(getAttachmentIcon(attachment.type))}"></i>
+                <span>${escapeHtml(getAttachmentLabel(attachment))}</span>
+              </a>
+            `).join("")}
+          </div>` : ""}
+      </article>`;
+  }).join("");
+}
+
+function formatAnnouncementTime(value) {
+  if (!value) return "Just now";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Just now";
+  return date.toLocaleString();
+}
+
+function getAttachmentIcon(type) {
+  const value = asString(type).toUpperCase();
+  if (value === "IMAGE") return "fas fa-image";
+  if (value === "VIDEO") return "fas fa-film";
+  if (value === "AUDIO") return "fas fa-music";
+  return "fas fa-file";
+}
+
+function getAttachmentLabel(attachment) {
+  const type = asString(attachment?.type).toUpperCase();
+  const resourceType = asString(attachment?.resourceType);
+  return resourceType || type || "Attachment";
 }
 
 function getAnnouncementFileType(file) {

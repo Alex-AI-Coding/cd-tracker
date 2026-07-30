@@ -10,6 +10,7 @@
   const assignmentCount       = document.getElementById('assignmentCount');
   const pendingCount          = document.getElementById('pendingCount');
   const submitAssignmentBtn   = document.getElementById('submitAssignmentBtn');
+  const studentAnnouncementsList = document.getElementById('studentAnnouncementsList');
 
   const params      = new URLSearchParams(window.location.search);
   const classroomId = params.get('classroomId') || params.get('id') || '';
@@ -21,6 +22,7 @@
     filters: { trackedSubmission: 'ALL' },
     currentActivityTab: 'needs-submission',
     isLoading: true,
+    announcements: [],
   };
 
   function escapeHtml(value) {
@@ -336,6 +338,7 @@
         : Array.isArray(unsubRes) ? unsubRes : [];
 
       console.log('[unsubmitted]', state.unsubmitted);
+      await loadAnnouncements();
     } catch (err) {
       console.error('[loadAll error]', err);
     } finally {
@@ -343,6 +346,28 @@
       renderActivities();
       loadClassroomInfo();
     }
+  }
+
+  async function loadAnnouncements() {
+    try {
+      const res = await apiClient.request(
+        `/classrooms/${encodeURIComponent(classroomId)}/announcements`,
+        { method: 'GET' },
+        { redirectOnUnauthorized: false }
+      );
+      state.announcements = normalizeAnnouncementCollection(res);
+      if (state.announcements.length) {
+        cacheAnnouncements(classroomId, state.announcements);
+      }
+    } catch (_) {
+      state.announcements = readCachedAnnouncements(classroomId);
+    }
+
+    if (!state.announcements.length) {
+      state.announcements = readCachedAnnouncements(classroomId);
+    }
+
+    renderAnnouncements();
   }
 
   function setStudentProfile(data) {
@@ -363,6 +388,67 @@
     const codeEl = document.getElementById('classroomInfoCode');
     if (nameEl) nameEl.textContent = decodeURIComponent(p.get('name') || '—');
     if (codeEl) codeEl.textContent = decodeURIComponent(p.get('code') || '—');
+  }
+
+  function renderAnnouncements() {
+    if (!studentAnnouncementsList) return;
+    if (!state.announcements.length) {
+      studentAnnouncementsList.innerHTML = `
+        <div class="announcement-empty">
+          <i class="fas fa-bullhorn"></i>
+          <p>No announcements yet.</p>
+        </div>`;
+      return;
+    }
+
+    studentAnnouncementsList.innerHTML = state.announcements.slice(0, 3).map((announcement) => `
+      <article class="announcement-card">
+        <div class="announcement-card-head">
+          <strong>Announcement</strong>
+          <span>${escapeHtml(formatAnnouncementTime(announcement.createdAt))}</span>
+        </div>
+        <div class="announcement-card-message">${escapeHtml(announcement.message || '')}</div>
+      </article>
+    `).join('');
+  }
+
+  function formatAnnouncementTime(value) {
+    if (!value) return 'Just now';
+    const d = new Date(value);
+    return isNaN(d) ? 'Just now' : d.toLocaleString();
+  }
+
+  function normalizeAnnouncementCollection(result) {
+    if (Array.isArray(result)) return result.map(normalizeAnnouncement).filter(Boolean);
+    if (Array.isArray(result?.data)) return result.data.map(normalizeAnnouncement).filter(Boolean);
+    if (Array.isArray(result?.content)) return result.content.map(normalizeAnnouncement).filter(Boolean);
+    if (Array.isArray(result?.items)) return result.items.map(normalizeAnnouncement).filter(Boolean);
+    if (result && typeof result === 'object' && result.announcementId) return [normalizeAnnouncement(result)].filter(Boolean);
+    return [];
+  }
+
+  function normalizeAnnouncement(item) {
+    if (!item || typeof item !== 'object') return null;
+    return {
+      announcementId: String(item.announcementId || ''),
+      message: String(item.message || ''),
+      createdAt: String(item.createdAt || ''),
+      attachments: Array.isArray(item.attachments) ? item.attachments : []
+    };
+  }
+
+  function cacheKeyForClassroom(id) { return `ct_announcements_${String(id || '')}`; }
+  function readCachedAnnouncements(id) {
+    try {
+      const raw = localStorage.getItem(cacheKeyForClassroom(id));
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed.map(normalizeAnnouncement).filter(Boolean) : [];
+    } catch (_) {
+      return [];
+    }
+  }
+  function cacheAnnouncements(id, announcements) {
+    try { localStorage.setItem(cacheKeyForClassroom(id), JSON.stringify(announcements || [])); } catch (_) {}
   }
 
   async function loadGithubRepos() {

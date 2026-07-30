@@ -259,6 +259,63 @@ body {
   margin-bottom: 28px;
 }
 
+.announcements-section {
+  margin-bottom: 28px;
+  padding: 16px;
+  background: var(--bg-overlay);
+  border: 1px solid var(--border-muted);
+  border-radius: var(--radius-lg);
+}
+
+.announcements-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.announcements-list {
+  display: grid;
+  gap: 10px;
+}
+
+.announcement-card {
+  border: 1px solid var(--border-muted);
+  border-radius: var(--radius-md);
+  background: var(--bg-base);
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.announcement-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  color: var(--fg-muted);
+  font-size: 11px;
+}
+
+.announcement-card-message {
+  color: var(--fg);
+  white-space: pre-wrap;
+}
+
+.announcement-empty {
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-base);
+  padding: 14px;
+  color: var(--fg-muted);
+  text-align: center;
+}
+
+.announcement-empty i {
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
 .stat-card {
   display: flex;
   align-items: center;
