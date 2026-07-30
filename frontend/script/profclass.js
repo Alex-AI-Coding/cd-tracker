@@ -39,6 +39,7 @@ const ANNOUNCEMENT_ALLOWED_EXTENSIONS = new Set([
   "aac",
   "pdf",
 ]);
+let selectedAnnouncementFiles = [];
 const ANNOUNCEMENT_CACHE_PREFIX = "ct_announcements_";
 
 const state = {
@@ -220,15 +221,30 @@ function setupEventListeners() {
       const files = Array.from(announcementAttachments.files || []);
       const invalid = getInvalidAnnouncementFiles(files);
 
-      renderAnnouncementAttachmentList(files);
       if (invalid.length) {
         announcementAttachments.value = "";
-        renderAnnouncementAttachmentList([]);
         showNotification(
           `Unsupported attachment: ${invalid[0].name || "file"}.`,
           "error",
         );
+        return;
       }
+
+      const existingKeys = new Set(
+        selectedAnnouncementFiles.map((file) => getAnnouncementFileKey(file)),
+      );
+      selectedAnnouncementFiles = [
+        ...selectedAnnouncementFiles,
+        ...files.filter((file) => {
+          const key = getAnnouncementFileKey(file);
+          if (existingKeys.has(key)) return false;
+          existingKeys.add(key);
+          return true;
+        }),
+      ];
+
+      renderAnnouncementAttachmentList(selectedAnnouncementFiles);
+      announcementAttachments.value = "";
     });
   }
 
@@ -1604,7 +1620,9 @@ async function handleCreateActivity() {
 async function handleCreateAnnouncement() {
   const message = asString(getInputValue("announcementMessage"));
   const attachmentsInput = document.getElementById("announcementAttachments");
-  const attachments = Array.from(attachmentsInput?.files || []);
+  const attachments = selectedAnnouncementFiles.length
+    ? [...selectedAnnouncementFiles]
+    : Array.from(attachmentsInput?.files || []);
   const button = document.getElementById("createAnnouncementBtn");
 
   if (!message) {
@@ -1641,6 +1659,7 @@ async function handleCreateAnnouncement() {
     );
 
     document.getElementById("announcementForm")?.reset();
+    selectedAnnouncementFiles = [];
     updateAnnouncementCharCount();
     renderAnnouncementAttachmentList([]);
     cacheAnnouncement(state.classroomId, normalizeAnnouncementResponse(result));
@@ -1970,6 +1989,10 @@ function getFileExtension(fileName) {
   const value = asString(fileName).toLowerCase();
   const dotIndex = value.lastIndexOf(".");
   return dotIndex >= 0 ? value.slice(dotIndex + 1) : "";
+}
+
+function getAnnouncementFileKey(file) {
+  return `${file.name}|${file.size}|${file.lastModified}`;
 }
 
 function renderAnnouncementAttachmentList(files) {
