@@ -344,6 +344,20 @@
     return formData;
   }
 
+  function createAnnouncementFormData(payload, attachments = []) {
+    const formData = new FormData();
+    formData.append(
+      "data",
+      new Blob([JSON.stringify(payload)], { type: "application/json" })
+    );
+
+    attachments.forEach((file) => {
+      formData.append("attachments", file);
+    });
+
+    return formData;
+  }
+
   const dialogState = {
     queue: Promise.resolve(),
     mounted: false,
@@ -630,10 +644,22 @@
     }
   };
 
+  const classroom = {
+    createAnnouncement(classroomId, payload, attachments = []) {
+      const formData = createAnnouncementFormData(payload, attachments);
+      return request(`/classroom/${encodeURIComponent(classroomId)}/announcement`, {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        body: formData
+      });
+    }
+  };
+
   globalScope.ApiClient = {
     request,
     baseUrl: API_BASE_URL,
     user,
+    classroom,
     checkAuth,
     checkAndRedirectIfAuthenticated,
     logout,

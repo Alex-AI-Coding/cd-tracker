@@ -1,6 +1,44 @@
 const apiRequest = window.ApiClient?.request;
 const ACTIVITY_TIME_ZONE = "Asia/Singapore";
 const ACTIVITY_TIME_ZONE_OFFSET = "+08:00";
+const ANNOUNCEMENT_MAX_MESSAGE_LENGTH = 5000;
+const ANNOUNCEMENT_ALLOWED_MIME_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "image/bmp",
+  "image/svg+xml",
+  "video/mp4",
+  "video/webm",
+  "video/quicktime",
+  "video/x-msvideo",
+  "video/x-matroska",
+  "audio/mpeg",
+  "audio/wav",
+  "audio/ogg",
+  "audio/aac",
+  "application/pdf",
+]);
+const ANNOUNCEMENT_ALLOWED_EXTENSIONS = new Set([
+  "jpg",
+  "jpeg",
+  "png",
+  "gif",
+  "webp",
+  "bmp",
+  "svg",
+  "mp4",
+  "webm",
+  "mov",
+  "avi",
+  "mkv",
+  "mp3",
+  "wav",
+  "ogg",
+  "aac",
+  "pdf",
+]);
 
 const state = {
   classroomId: null,
@@ -85,6 +123,11 @@ function setupEventListeners() {
   const backBtn = document.getElementById("backDashboardBtn");
   const submissionFilter = document.getElementById("submissionFilter");
   const activityFilter = document.getElementById("activityFilter");
+  const announcementForm = document.getElementById("announcementForm");
+  const announcementMessage = document.getElementById("announcementMessage");
+  const announcementAttachments = document.getElementById(
+    "announcementAttachments",
+  );
 
   if (createBtn) {
     createBtn.addEventListener("click", () => {
@@ -161,6 +204,35 @@ function setupEventListeners() {
     activityFilter.addEventListener("change", (event) => {
       state.activityFilter = asString(event.target.value).toLowerCase() || "all";
       renderRecentActivity();
+    });
+  }
+
+  if (announcementMessage) {
+    announcementMessage.addEventListener("input", updateAnnouncementCharCount);
+    updateAnnouncementCharCount();
+  }
+
+  if (announcementAttachments) {
+    announcementAttachments.addEventListener("change", () => {
+      const files = Array.from(announcementAttachments.files || []);
+      const invalid = getInvalidAnnouncementFiles(files);
+
+      renderAnnouncementAttachmentList(files);
+      if (invalid.length) {
+        announcementAttachments.value = "";
+        renderAnnouncementAttachmentList([]);
+        showNotification(
+          `Unsupported attachment: ${invalid[0].name || "file"}.`,
+          "error",
+        );
+      }
+    });
+  }
+
+  if (announcementForm) {
+    announcementForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      await handleCreateAnnouncement();
     });
   }
 
@@ -1511,6 +1583,60 @@ async function handleCreateActivity() {
   }
 }
 
+async function handleCreateAnnouncement() {
+  const message = asString(getInputValue("announcementMessage"));
+  const attachmentsInput = document.getElementById("announcementAttachments");
+  const attachments = Array.from(attachmentsInput?.files || []);
+  const button = document.getElementById("createAnnouncementBtn");
+
+  if (!message) {
+    showNotification("Announcement message is required.", "error");
+    return;
+  }
+
+  if (message.length > ANNOUNCEMENT_MAX_MESSAGE_LENGTH) {
+    showNotification("Announcement message must be 5000 characters or less.", "error");
+    return;
+  }
+
+  const invalidFiles = getInvalidAnnouncementFiles(attachments);
+  if (invalidFiles.length) {
+    showNotification(`Unsupported attachment: ${invalidFiles[0].name || "file"}.`, "error");
+    return;
+  }
+
+  if (!window.ApiClient?.classroom?.createAnnouncement) {
+    showNotification("Announcement API is not initialized.", "error");
+    return;
+  }
+
+  if (button) {
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
+  }
+
+  try {
+    await window.ApiClient.classroom.createAnnouncement(
+      state.classroomId,
+      { message },
+      attachments,
+    );
+
+    document.getElementById("announcementForm")?.reset();
+    updateAnnouncementCharCount();
+    renderAnnouncementAttachmentList([]);
+    showNotification("Announcement posted successfully.", "success");
+  } catch (error) {
+    console.error("Failed to create announcement:", error);
+    showNotification(error?.message || "Failed to post announcement.", "error");
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.innerHTML = '<i class="fas fa-paper-plane"></i> Post Announcement';
+    }
+  }
+}
+
 function openEditActivityModal(activityId) {
   const activity = state.activities.find(
     (item) => getActivityId(item) === activityId,
@@ -1759,6 +1885,80 @@ function showNotification(message, type = "info") {
         note.style.animation = 'slideOut 0.22s ease-in';
         setTimeout(() => note.remove(), 220);
     }, 3000);
+}
+
+function updateAnnouncementCharCount() {
+  const message = getInputValue("announcementMessage");
+  const counter = document.getElementById("announcementCharCount");
+  if (!counter) return;
+
+  counter.textContent = `${message.length} / ${ANNOUNCEMENT_MAX_MESSAGE_LENGTH}`;
+  counter.classList.toggle(
+    "is-warning",
+    message.length > ANNOUNCEMENT_MAX_MESSAGE_LENGTH * 0.9,
+  );
+}
+
+function getInvalidAnnouncementFiles(files) {
+  return files.filter((file) => !isValidAnnouncementFile(file));
+}
+
+function isValidAnnouncementFile(file) {
+  if (!file) return false;
+
+  const mimeType = asString(file.type).toLowerCase();
+  const extension = getFileExtension(file.name);
+
+  return (
+    (mimeType && ANNOUNCEMENT_ALLOWED_MIME_TYPES.has(mimeType)) ||
+    (extension && ANNOUNCEMENT_ALLOWED_EXTENSIONS.has(extension))
+  );
+}
+
+function getFileExtension(fileName) {
+  const value = asString(fileName).toLowerCase();
+  const dotIndex = value.lastIndexOf(".");
+  return dotIndex >= 0 ? value.slice(dotIndex + 1) : "";
+}
+
+function renderAnnouncementAttachmentList(files) {
+  const container = document.getElementById("announcementAttachmentList");
+  if (!container) return;
+
+  if (!files.length) {
+    container.innerHTML = "";
+    return;
+  }
+
+  container.innerHTML = files
+    .map((file) => {
+      const type = getAnnouncementFileType(file);
+      return `
+        <div class="announcement-attachment-item">
+          <i class="${escapeHtml(getAnnouncementFileIcon(type))}"></i>
+          <span>${escapeHtml(file.name)}</span>
+          <small>${escapeHtml(type)}</small>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+function getAnnouncementFileType(file) {
+  const mimeType = asString(file?.type).toLowerCase();
+  const extension = getFileExtension(file?.name);
+
+  if (mimeType.startsWith("image/") || ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"].includes(extension)) return "IMAGE";
+  if (mimeType.startsWith("video/") || ["mp4", "webm", "mov", "avi", "mkv"].includes(extension)) return "VIDEO";
+  if (mimeType.startsWith("audio/") || ["mp3", "wav", "ogg", "aac"].includes(extension)) return "AUDIO";
+  return "FILE";
+}
+
+function getAnnouncementFileIcon(type) {
+  if (type === "IMAGE") return "fas fa-image";
+  if (type === "VIDEO") return "fas fa-film";
+  if (type === "AUDIO") return "fas fa-music";
+  return "fas fa-file-pdf";
 }
 
 function asString(value) {

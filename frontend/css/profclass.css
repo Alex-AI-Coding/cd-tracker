@@ -828,6 +828,64 @@ body.modal-open {
 
 .form-group textarea { min-height: 80px; resize: vertical; }
 
+.announcement-form {
+    display: grid;
+    gap: 2px;
+}
+
+.announcement-meta-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 6px;
+    font-size: 11px;
+    color: #8b949e;
+}
+
+#announcementCharCount.is-warning {
+    color: #f5cc86;
+}
+
+.announcement-attachment-list {
+    display: grid;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.announcement-attachment-item {
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #21262d;
+    border-radius: 6px;
+    background: #0d1117;
+    color: #c9d1d9;
+    padding: 7px 9px;
+    font-size: 12px;
+}
+
+.announcement-attachment-item i {
+    color: #58a6ff;
+}
+
+.announcement-attachment-item span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.announcement-attachment-item small {
+    color: #8b949e;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.announcement-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
 .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;

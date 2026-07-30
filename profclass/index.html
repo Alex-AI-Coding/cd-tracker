@@ -49,6 +49,42 @@
             <div class="section">
                 <div class="section-header">
                     <h2 class="section-title">
+                        <i class="fas fa-bullhorn"></i>
+                        Announcement
+                    </h2>
+                </div>
+                <form id="announcementForm" class="announcement-form">
+                    <div class="form-group">
+                        <label for="announcementMessage">
+                            <i class="fas fa-message"></i>
+                            Message
+                        </label>
+                        <textarea id="announcementMessage" maxlength="5000" rows="5" placeholder="Post an announcement to this classroom..." required></textarea>
+                        <div class="announcement-meta-row">
+                            <span>Images, PDF, audio, and video only</span>
+                            <span id="announcementCharCount">0 / 5000</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="announcementAttachments">
+                            <i class="fas fa-paperclip"></i>
+                            Attachments
+                        </label>
+                        <input type="file" id="announcementAttachments" multiple accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.svg,.mp4,.webm,.mov,.avi,.mkv,.mp3,.wav,.ogg,.aac,.pdf,image/jpeg,image/png,image/gif,image/webp,image/bmp,image/svg+xml,video/mp4,video/webm,video/quicktime,video/x-msvideo,video/x-matroska,audio/mpeg,audio/wav,audio/ogg,audio/aac,application/pdf">
+                        <div id="announcementAttachmentList" class="announcement-attachment-list"></div>
+                    </div>
+                    <div class="announcement-actions">
+                        <button class="btn btn-primary" id="createAnnouncementBtn" type="submit">
+                            <i class="fas fa-paper-plane"></i>
+                            Post Announcement
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
                         <i class="fas fa-tasks"></i>
                         Active Activities
                     </h2>
