@@ -351,7 +351,9 @@
       new Blob([JSON.stringify(payload)], { type: "application/json" })
     );
 
-    attachments.forEach((file) => {
+    // MultipartFile lists are represented by repeated parts with the same
+    // field name. Array.from also supports the FileList returned by <input>.
+    Array.from(attachments || []).forEach((file) => {
       formData.append("attachments", file);
     });
 
