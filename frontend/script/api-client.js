@@ -649,7 +649,7 @@
   const classroom = {
     createAnnouncement(classroomId, payload, attachments = []) {
       const formData = createAnnouncementFormData(payload, attachments);
-      return request(`/classrooms/${encodeURIComponent(classroomId)}/announcement`, {
+      return request(`/classroom/${encodeURIComponent(classroomId)}/announcement`, {
         method: "POST",
         headers: { Accept: "application/json" },
         body: formData
@@ -657,7 +657,7 @@
     },
 
     listAnnouncements(classroomId) {
-      return request(`/classrooms/${encodeURIComponent(classroomId)}/announcements`, {
+      return request(`/classroom/${encodeURIComponent(classroomId)}/announcement`, {
         method: "GET",
         headers: { Accept: "application/json" }
       });
