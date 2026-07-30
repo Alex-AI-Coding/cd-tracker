@@ -2597,34 +2597,6 @@ function proceedToAnalyzer(repoUrl, activityTitle, studentName) {
  * Helper function to open modal
  */
 
-
-    // Store the data in localStorage for the syntax page to use
-    const analysisData = {
-        repoUrl: repoUrl,
-        activityTitle: activityTitle || 'Activity',
-        studentName: studentName || 'Student',
-        timestamp: new Date().toISOString(),
-        source: 'professor_dashboard'
-    };
-    
-    // Save to localStorage
-    localStorage.setItem('pendingAnalysis', JSON.stringify(analysisData));
-    
-    // Also store in sessionStorage as backup
-    sessionStorage.setItem('pendingAnalysis', JSON.stringify(analysisData));
-    
-    // Show notification
-    showNotification(`Navigating to analyzer for: ${studentName}`, 'info');
-    
-    // Navigate to syntax.html
-    // Adjust the path based on your file structure
-    window.location.href = '/Syntax.html';
-    // If Syntax.html is in the same directory, use:
-    // window.location.href = 'Syntax.html';
-    // If it's in a different folder, adjust accordingly:
-    // window.location.href = '/frontend/Syntax.html';
-
-
 function renderLoadingSkeleton() {
     const assignments = document.getElementById('assignmentsList');
     const students = document.getElementById('studentsList');
