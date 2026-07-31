@@ -46,3 +46,7 @@ docker-compose.override.yml
 # OS
 .DS_Store
 Thumbs.db
+
+# Local theme tools and backups
+cd-tracker-all-pages-theme/
+theme-backup-*/
