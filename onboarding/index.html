@@ -1,13 +1,25 @@
 <!doctype html>
 <html lang="en">
   <head>
+  <!-- CodeTracker theme: set before paint to prevent flashing -->
+  <script id="codetracker-theme-init">
+    (() => {
+      const key = "codetracker-theme";
+      let saved = null;
+      try { saved = localStorage.getItem(key); } catch (_) {}
+      const system = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      document.documentElement.dataset.theme = saved === "light" || saved === "dark" ? saved : system;
+    })();
+  </script>
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Complete Your Profile - CodeTracker</title>
     <link rel="icon" type="image/png" href="/frontend/asset/git.png">
     <link rel="stylesheet" href="/frontend/css/onboarding.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  </head>
+  <link rel="stylesheet" href="/frontend/css/theme.css" data-codetracker-theme>
+</head>
   <body>
     <main class="onboarding-layout">
       <aside class="onboarding-aside" aria-label="CodeTracker onboarding">
@@ -83,5 +95,6 @@
     </main>
     <script src="/frontend/script/api-client.js"></script>
     <script src="/frontend/script/onboarding.js"></script>
-  </body>
+  <script src="/frontend/script/theme.js" data-codetracker-theme></script>
+</body>
 </html>

@@ -1,6 +1,17 @@
 <!doctype html>
 <html lang="en">
   <head>
+  <!-- CodeTracker theme: set before paint to prevent flashing -->
+  <script id="codetracker-theme-init">
+    (() => {
+      const key = "codetracker-theme";
+      let saved = null;
+      try { saved = localStorage.getItem(key); } catch (_) {}
+      const system = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      document.documentElement.dataset.theme = saved === "light" || saved === "dark" ? saved : system;
+    })();
+  </script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CodeTracker - Classroom</title>
@@ -9,7 +20,8 @@
     <link rel="stylesheet" href="/frontend/css/studentclass.css">
     <!-- CodeTracker AI Chatbot -->
     <link rel="stylesheet" href="/frontend/css/chatbot.css">
-  </head>
+  <link rel="stylesheet" href="/frontend/css/theme.css" data-codetracker-theme>
+</head>
   <body>
 
     <!-- ── Top Navigation Bar ─────────────────────────────── -->
@@ -207,5 +219,6 @@
     <script src="/frontend/script/api-client.js"></script>
     <script src="/frontend/script/studentclass.js"></script>
     <script src="/frontend/script/chatbot.js"></script>
-  </body>
+  <script src="/frontend/script/theme.js" data-codetracker-theme></script>
+</body>
 </html>

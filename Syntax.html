@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- CodeTracker theme: set before paint to prevent flashing -->
+  <script id="codetracker-theme-init">
+    (() => {
+      const key = "codetracker-theme";
+      let saved = null;
+      try { saved = localStorage.getItem(key); } catch (_) {}
+      const system = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      document.documentElement.dataset.theme = saved === "light" || saved === "dark" ? saved : system;
+    })();
+  </script>
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Python/Java/C/C++ Code Analyzer | Student Review</title>
@@ -688,6 +699,7 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="/frontend/css/theme.css" data-codetracker-theme>
 </head>
 <body>
   <div class="header">
@@ -1067,5 +1079,6 @@
       }
     });
   </script>
+  <script src="/frontend/script/theme.js" data-codetracker-theme></script>
 </body>
 </html>
