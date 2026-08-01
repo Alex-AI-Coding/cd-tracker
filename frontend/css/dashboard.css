@@ -101,7 +101,10 @@ html {
         min-height: 30px;
     }
 
-    .create-class,
+    .create-class {
+        width: 100px;
+    }
+
     .search-class {
         width: 50px;
         height: 30px;
