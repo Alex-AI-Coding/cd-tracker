@@ -30,42 +30,42 @@ html {
 
 :root {
   /* Canvas */
-  --bg-base:        #0d1117;
-  --bg-overlay:     #161b22;
-  --bg-inset:       #010409;
-  --bg-subtle:      #1c2128;
+  --bg-base:        var(--color-page);
+  --bg-overlay:     var(--color-surface);
+  --bg-inset:       var(--color-page-deep);
+  --bg-subtle:      var(--color-surface-raised);
 
   /* Borders */
-  --border:         #30363d;
-  --border-muted:   #21262d;
+  --border:         var(--color-border);
+  --border-muted:   var(--color-surface-hover);
 
   /* Foreground */
-  --fg:             #e6edf3;
-  --fg-muted:       #8b949e;
-  --fg-subtle:      #6e7681;
+  --fg:             var(--color-heading);
+  --fg-muted:       var(--color-muted);
+  --fg-subtle:      var(--color-subtle);
 
   /* Accent — blue */
-  --accent:         #58a6ff;
+  --accent:         var(--color-primary);
   --accent-dim:     rgba(88, 166, 255, 0.15);
   --accent-border:  rgba(88, 166, 255, 0.3);
-  --accent-dark:    #1f6feb;
+  --accent-dark:    var(--color-primary-strong);
 
   /* Success — green */
-  --success:        #3fb950;
+  --success:        var(--color-success);
   --success-dim:    rgba(63, 185, 80, 0.12);
   --success-border: rgba(63, 185, 80, 0.3);
 
   /* Danger — red */
-  --danger:         #f85149;
+  --danger:         var(--color-danger);
   --danger-dim:     rgba(248, 81, 73, 0.1);
   --danger-border:  rgba(248, 81, 73, 0.28);
 
   /* Warning — amber */
-  --warning:        #d29922;
+  --warning:        var(--color-warning);
   --warning-dim:    rgba(210, 153, 34, 0.1);
 
   /* Attention — orange */
-  --attention:      #f0883e;
+  --attention:      var(--color-attention);
 
   /* Layout */
   --page-max:       960px;
@@ -1192,7 +1192,7 @@ body {
   animation: pulse-btn 1.1s ease-in-out infinite;
 }
 .btn-primary.is-success {
-  background: linear-gradient(135deg, #238636, var(--success));
+  background: linear-gradient(135deg, var(--color-success-strong), var(--success));
   box-shadow: 0 4px 12px rgba(63,185,80,0.2);
 }
 .btn-primary.is-error {
