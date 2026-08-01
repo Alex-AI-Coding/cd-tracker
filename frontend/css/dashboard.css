@@ -102,8 +102,8 @@ html {
 
     .search-class {
         width: 38px;
-        height: auto;
-        min-height: calc(38px - 10px);
+        height: 30px;
+        min-height: 30px;
         justify-content: center;
         padding: 0;
         flex-shrink: 0;
@@ -1696,6 +1696,12 @@ html {
 
     .action-buttons .btn {
         min-height: 38px;
+    }
+
+    .action-buttons .search-class {
+        height: 30px;
+        min-height: 30px;
+        width: clamp(32px, 12vw, 38px);
     }
 
     .header-search {
