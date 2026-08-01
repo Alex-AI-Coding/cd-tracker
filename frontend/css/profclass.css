@@ -962,13 +962,19 @@ body.modal-open {
 }
 
 .announcement-modal-content {
-    width: 920px;
-    max-width: 96%;
+    width: min(88vw, 400px);
+    max-width: min(88vw, 400px);
+    padding: 0;
+    overflow: hidden;
+    border-radius: 10px;
 }
 
 .announcement-edit-modal-content {
-    width: 760px;
-    max-width: 96%;
+    width: min(88vw, 400px);
+    max-width: min(88vw, 400px);
+    padding: 0;
+    overflow: hidden;
+    border-radius: 10px;
 }
 
 .announcement-modal-toolbar {
@@ -1005,14 +1011,21 @@ body.modal-open {
     border: 1px solid #21262d;
     border-radius: 10px;
     background: linear-gradient(180deg, rgba(13, 17, 23, 0.98), rgba(13, 17, 23, 0.9));
-    padding: 14px;
+    padding: 12px;
     display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 290px);
     gap: 12px;
     box-shadow: 0 10px 26px rgba(0, 0, 0, 0.18);
 }
 
 .announcement-item:hover {
     border-color: #30363d;
+}
+
+.announcement-item-main {
+    min-width: 0;
+    display: grid;
+    gap: 8px;
 }
 
 .announcement-item-head {
@@ -1059,7 +1072,6 @@ body.modal-open {
     color: #8b949e;
     font-size: 11px;
     white-space: nowrap;
-    margin-left: auto;
 }
 
 .announcement-item-actions {
@@ -1099,19 +1111,47 @@ body.modal-open {
     font-size: 13px;
 }
 
+.announcement-item-side {
+    min-width: 0;
+    border-left: 1px solid #21262d;
+    padding-left: 12px;
+    display: grid;
+    align-content: start;
+    gap: 8px;
+}
+
+.announcement-item-side-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #8b949e;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.announcement-item-side-label i {
+    color: #58a6ff;
+}
+
 .announcement-item-attachments {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    overflow-x: auto;
-    padding-bottom: 2px;
+    overflow-x: hidden;
+}
+
+.announcement-item-empty-attachments {
+    color: #8b949e;
+    font-size: 12px;
+    padding: 8px 0;
 }
 
 .announcement-attachment-link {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 6px 10px;
+    padding: 5px 9px;
     border-radius: 999px;
     border: 1px solid #30363d;
     background: #161b22;
@@ -1129,8 +1169,8 @@ body.modal-open {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    width: 180px;
-    max-width: 180px;
+    width: 100%;
+    max-width: 100%;
     text-decoration: none;
     color: #c9d1d9;
     border: 1px solid #30363d;
@@ -1149,7 +1189,7 @@ body.modal-open {
 .announcement-attachment-media video {
     display: block;
     width: 100%;
-    height: 118px;
+    height: 104px;
     object-fit: cover;
     background: #0d1117;
 }
@@ -1162,7 +1202,7 @@ body.modal-open {
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 10px;
+    padding: 7px 9px;
     font-size: 11px;
     line-height: 1.3;
 }
@@ -1238,6 +1278,26 @@ body.modal-open {
 .announcement-form-modal {
     display: grid;
     gap: 8px;
+}
+
+.announcement-modal-content .modal-body,
+.announcement-edit-modal-content .modal-body {
+    padding: 14px 16px 10px;
+}
+
+.announcement-modal-content .modal-footer,
+.announcement-edit-modal-content .modal-footer {
+    padding: 12px 16px;
+}
+
+.announcement-modal-content .form-group,
+.announcement-edit-modal-content .form-group {
+    margin-bottom: 12px;
+}
+
+.announcement-modal-content textarea,
+.announcement-edit-modal-content textarea {
+    min-height: 110px;
 }
 
 .form-row {
@@ -2658,6 +2718,17 @@ a.submission-repo-link:hover {
 
     .announcement-item-head {
         flex-direction: column;
+    }
+
+    .announcement-item {
+        grid-template-columns: 1fr;
+    }
+
+    .announcement-item-side {
+        border-left: 0;
+        border-top: 1px solid #21262d;
+        padding-left: 0;
+        padding-top: 10px;
     }
 
     .announcement-item-actions {

@@ -2263,34 +2263,45 @@ function renderAnnouncements(container, announcements) {
     const message = asString(announcement.message) || "No message provided.";
     return `
       <article class="announcement-item" data-announcement-id="${escapeHtml(announcement.announcementId)}">
-        <div class="announcement-item-head">
-          <div class="announcement-item-title-wrap">
-            <div class="announcement-item-title">
-              <i class="fas fa-bullhorn"></i>
-              <span>Announcement</span>
+        <div class="announcement-item-main">
+          <div class="announcement-item-head">
+            <div class="announcement-item-title-wrap">
+              <div class="announcement-item-title">
+                <i class="fas fa-bullhorn"></i>
+                <span>Announcement</span>
+              </div>
+              <div class="announcement-item-meta">
+                <span><i class="fas fa-paper-plane"></i> Posted</span>
+                ${hasEditedTimestamp ? '<span><i class="fas fa-pen-to-square"></i> Edited</span>' : ''}
+              </div>
             </div>
-            <div class="announcement-item-meta">
-              <span><i class="fas fa-paper-plane"></i> Posted</span>
-              ${hasEditedTimestamp ? '<span><i class="fas fa-pen-to-square"></i> Edited</span>' : ''}
+            <div class="announcement-item-actions">
+              <button type="button" class="announcement-item-action" data-announcement-action="edit" data-announcement-id="${escapeHtml(announcement.announcementId)}">
+                <i class="fas fa-pen-to-square"></i>
+                Edit
+              </button>
+              <button type="button" class="announcement-item-action danger" data-announcement-action="delete" data-announcement-id="${escapeHtml(announcement.announcementId)}">
+                <i class="fas fa-trash-can"></i>
+                Delete
+              </button>
             </div>
           </div>
-          <div class="announcement-item-actions">
-            <button type="button" class="announcement-item-action" data-announcement-action="edit" data-announcement-id="${escapeHtml(announcement.announcementId)}">
-              <i class="fas fa-pen-to-square"></i>
-              Edit
-            </button>
-            <button type="button" class="announcement-item-action danger" data-announcement-action="delete" data-announcement-id="${escapeHtml(announcement.announcementId)}">
-              <i class="fas fa-trash-can"></i>
-              Delete
-            </button>
-          </div>
+          <span class="announcement-item-time">${escapeHtml(formatAnnouncementTime(announcement.createdAt))}</span>
+          <div class="announcement-item-message">${escapeHtml(message)}</div>
         </div>
-        <span class="announcement-item-time">${escapeHtml(formatAnnouncementTime(announcement.createdAt))}</span>
-        <div class="announcement-item-message">${escapeHtml(message)}</div>
-        ${attachments.length ? `
-          <div class="announcement-item-attachments">
-            ${attachments.map((attachment) => renderAnnouncementAttachmentPreview(attachment)).join("")}
-          </div>` : ""}
+        <div class="announcement-item-side">
+          <div class="announcement-item-side-label">
+            <i class="fas fa-paperclip"></i>
+            <span>Attachments</span>
+          </div>
+          ${attachments.length ? `
+            <div class="announcement-item-attachments">
+              ${attachments.map((attachment) => renderAnnouncementAttachmentPreview(attachment)).join("")}
+            </div>` : `
+            <div class="announcement-item-empty-attachments">
+              No attachments
+            </div>`}
+        </div>
       </article>`;
   }).join("");
 }
