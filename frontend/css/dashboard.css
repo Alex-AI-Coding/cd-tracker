@@ -92,7 +92,12 @@ html {
         display: flex;
         gap: 6px;
         align-items: center;
+        flex-wrap: wrap;
         position: static;
+    }
+
+    .action-buttons .btn {
+        min-height: 38px;
     }
 
     .search-class {
@@ -1663,7 +1668,10 @@ html {
 @media (max-width: 480px) {
     .dashboard-header { 
         padding: 0 10px; 
-        height: 48px; 
+        height: auto;
+        min-height: 48px;
+        padding-top: 5px;
+        padding-bottom: 5px;
     }
 
     .logo { font-size: 14px; gap: 6px; }
@@ -1682,6 +1690,11 @@ html {
     .action-buttons {
         gap: 4px;
         flex-shrink: 0;
+        justify-content: flex-end;
+    }
+
+    .action-buttons .btn {
+        min-height: 38px;
     }
 
     .header-search {
@@ -1833,7 +1846,16 @@ html {
 
 /* ✅ Large Phones / Small Tablets */
 @media (max-width: 768px) {
-    .dashboard-header { padding: 0 14px; height: 50px; }
+    .dashboard-header {
+        padding: 6px 14px;
+        height: auto;
+        min-height: 50px;
+    }
+
+    .header-right {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
 
     .header-divider, .header-label { display: none; }
 
