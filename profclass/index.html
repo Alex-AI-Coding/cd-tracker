@@ -73,6 +73,69 @@
                 </div>
             </div>
 
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-tasks"></i>
+                        Active Activities
+                    </h2>
+                    <button class="create-activity-btn" id="createActivityBtn">
+                        <i class="fas fa-plus-circle"></i>
+                        Create Activity
+                    </button>
+                </div>
+                
+                <div id="assignmentsList">
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>No activities yet. Create your first one!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="right-column">
+            <!-- Students Section -->
+            <div class="students-section">
+                <div class="students-header">
+                    <h2 class="students-title">
+                        <i class="fas fa-users"></i>
+                        Students
+                    </h2>
+                    <p class="students-subtitle">Student roster</p>
+                </div>
+                <div id="studentsList">
+                    <div class="empty-state">
+                        <i class="fas fa-users"></i>
+                        <p>No students enrolled yet</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- All Class Activity -->
+            <div class="activity-section">
+                <div class="activity-header">
+                    <h2 class="activity-title">
+                        <i class="fas fa-globe"></i>
+                        Recent Activity
+                    </h2>
+                    <select class="filter-select" id="activityFilter">
+                        <option value="all">All Activity</option>
+                        <option value="activities">Activities</option>
+                        <option value="submissions">Submissions</option>
+                        <option value="joins">Joins</option>
+                    </select>
+                </div>
+                
+                <div class="activity-list" id="activityList">
+                    <div class="empty-state">
+                        <i class="fas fa-history"></i>
+                        <p>No activity yet</p>
+                    </div>
+                </div>
+            </div>
+
             <div class="modal" id="createAnnouncementModal">
                 <div class="modal-content announcement-edit-modal-content">
                     <div class="modal-header">
@@ -161,69 +224,6 @@
                             <i class="fas fa-save"></i>
                             Save Changes
                         </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="section">
-                <div class="section-header">
-                    <h2 class="section-title">
-                        <i class="fas fa-tasks"></i>
-                        Active Activities
-                    </h2>
-                    <button class="create-activity-btn" id="createActivityBtn">
-                        <i class="fas fa-plus-circle"></i>
-                        Create Activity
-                    </button>
-                </div>
-                
-                <div id="assignmentsList">
-                    <div class="empty-state">
-                        <i class="fas fa-inbox"></i>
-                        <p>No activities yet. Create your first one!</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Right Column -->
-        <div class="right-column">
-            <!-- Students Section -->
-            <div class="students-section">
-                <div class="students-header">
-                    <h2 class="students-title">
-                        <i class="fas fa-users"></i>
-                        Students
-                    </h2>
-                    <p class="students-subtitle">Student roster</p>
-                </div>
-                <div id="studentsList">
-                    <div class="empty-state">
-                        <i class="fas fa-users"></i>
-                        <p>No students enrolled yet</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- All Class Activity -->
-            <div class="activity-section">
-                <div class="activity-header">
-                    <h2 class="activity-title">
-                        <i class="fas fa-globe"></i>
-                        Recent Activity
-                    </h2>
-                    <select class="filter-select" id="activityFilter">
-                        <option value="all">All Activity</option>
-                        <option value="activities">Activities</option>
-                        <option value="submissions">Submissions</option>
-                        <option value="joins">Joins</option>
-                    </select>
-                </div>
-                
-                <div class="activity-list" id="activityList">
-                    <div class="empty-state">
-                        <i class="fas fa-history"></i>
-                        <p>No activity yet</p>
                     </div>
                 </div>
             </div>
