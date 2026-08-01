@@ -486,6 +486,12 @@
     return 'file';
   }
 
+  function getAttachmentKindLabel(kind) {
+    if (kind === 'image') return 'image';
+    if (kind === 'video') return 'video';
+    return 'attachment';
+  }
+
   function renderAnnouncementAttachment(attachment) {
     const url = String(attachment?.url || '').trim();
     if (!url) return '';
@@ -498,7 +504,7 @@
           <img class="announcement-attachment-preview" src="${escapeHtml(url)}" alt="${escapeHtml(label)}">
           <span class="announcement-attachment-body">
             <i class="fas fa-image"></i>
-            <span>${escapeHtml(label)}</span>
+            <span>${escapeHtml(getAttachmentKindLabel(kind))}</span>
             <i class="fas fa-download"></i>
           </span>
         </a>`;
@@ -510,7 +516,7 @@
           <video class="announcement-attachment-preview" controls playsinline preload="metadata" src="${escapeHtml(url)}"></video>
           <a class="announcement-attachment-body" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" download>
             <i class="fas fa-video"></i>
-            <span>${escapeHtml(label)}</span>
+            <span>${escapeHtml(getAttachmentKindLabel(kind))}</span>
             <i class="fas fa-download"></i>
           </a>
         </div>`;
