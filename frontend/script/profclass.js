@@ -134,8 +134,8 @@ function setupEventListeners() {
   const announcementAttachments = document.getElementById(
     "announcementAttachments",
   );
-  const viewAnnouncementsBtn = document.getElementById("viewAnnouncementsBtn");
-  const announcementsModal = document.getElementById("announcementsModal");
+  const createAnnouncementOpenBtn = document.getElementById("createAnnouncementOpenBtn");
+  const createAnnouncementModal = document.getElementById("createAnnouncementModal");
   const editAnnouncementMessage = document.getElementById("editAnnouncementMessage");
   const editAnnouncementAttachments = document.getElementById("editAnnouncementAttachments");
   const editAnnouncementModal = document.getElementById("editAnnouncementModal");
@@ -263,10 +263,10 @@ function setupEventListeners() {
     });
   }
 
-  if (viewAnnouncementsBtn) {
-    viewAnnouncementsBtn.addEventListener("click", async () => {
-      openModal("announcementsModal");
-      await loadAnnouncements();
+  if (createAnnouncementOpenBtn) {
+    createAnnouncementOpenBtn.addEventListener("click", () => {
+      resetAnnouncementComposerState();
+      openModal("createAnnouncementModal");
     });
   }
 
@@ -288,10 +288,10 @@ function setupEventListeners() {
     });
   }
 
-  if (announcementsModal) {
-    announcementsModal.addEventListener("click", (event) => {
-      if (event.target === announcementsModal) {
-        closeModal("announcementsModal");
+  if (createAnnouncementModal) {
+    createAnnouncementModal.addEventListener("click", (event) => {
+      if (event.target === createAnnouncementModal) {
+        closeModal("createAnnouncementModal");
       }
     });
   }
@@ -516,6 +516,7 @@ async function loadInitialData() {
       loadStudents(),
       loadActivities(),
       loadSubmittedActivities(),
+      loadAnnouncements(true),
     ]);
 
     await new Promise(r => setTimeout(r, 120));
@@ -1718,10 +1719,8 @@ async function handleCreateAnnouncement() {
       attachments,
     );
 
-    document.getElementById("announcementForm")?.reset();
-    selectedAnnouncementFiles = [];
-    updateAnnouncementCharCount();
-    renderAnnouncementAttachmentList([]);
+    resetAnnouncementComposerState();
+    closeModal("createAnnouncementModal");
     cacheAnnouncement(state.classroomId, normalizeAnnouncementResponse(result));
     await loadAnnouncements(true);
     showNotification("Announcement posted successfully.", "success");
@@ -1775,6 +1774,15 @@ function getAnnouncementById(announcementId) {
   ) || readCachedAnnouncements(state.classroomId).find(
     (item) => asString(item?.announcementId) === targetId,
   ) || null;
+}
+
+function resetAnnouncementComposerState() {
+  const form = document.getElementById("announcementForm");
+  if (form) form.reset();
+
+  selectedAnnouncementFiles = [];
+  updateAnnouncementCharCount();
+  renderAnnouncementAttachmentList([]);
 }
 
 function openEditActivityModal(activityId) {
@@ -2013,6 +2021,8 @@ function closeModal(modalId) {
 
     if (modalId === "editAnnouncementModal") {
       resetAnnouncementEditState();
+    } else if (modalId === "createAnnouncementModal") {
+      resetAnnouncementComposerState();
     }
 }
 
@@ -2154,6 +2164,15 @@ function cacheAnnouncement(classroomId, announcement) {
   if (!announcement) return;
   const current = readCachedAnnouncements(classroomId);
   const next = [announcement, ...current.filter((item) => item.announcementId !== announcement.announcementId)];
+  cacheAnnouncements(classroomId, next);
+}
+
+function removeAnnouncementFromCache(classroomId, announcementId) {
+  const targetId = asString(announcementId);
+  if (!targetId) return;
+
+  const current = readCachedAnnouncements(classroomId);
+  const next = current.filter((item) => asString(item?.announcementId) !== targetId);
   cacheAnnouncements(classroomId, next);
 }
 
@@ -2436,6 +2455,14 @@ async function handleDeleteAnnouncement(announcementId) {
     }
 
     await window.ApiClient.classroom.deleteAnnouncement(state.classroomId, targetId);
+    removeAnnouncementFromCache(state.classroomId, targetId);
+    state.announcements = state.announcements.filter(
+      (item) => asString(item?.announcementId) !== targetId,
+    );
+    const container = document.getElementById("announcementsList");
+    if (container) {
+      renderAnnouncements(container, state.announcements);
+    }
     showNotification("Announcement deleted successfully.", "success");
     await loadAnnouncements(true);
   } catch (error) {

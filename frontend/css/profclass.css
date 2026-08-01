@@ -904,6 +904,32 @@ body.modal-open {
     color: #58a6ff;
 }
 
+.announcement-feed-shell {
+    display: grid;
+    gap: 12px;
+}
+
+.announcement-feed-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.announcement-feed-note {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 8px;
+    color: #8b949e;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.announcement-feed-note i {
+    color: #58a6ff;
+    margin-top: 1px;
+}
+
 .announcement-modal-content {
     width: 920px;
     max-width: 96%;
