@@ -100,13 +100,12 @@ html {
         min-height: 38px;
     }
 
+    .create-class,
     .search-class {
-        width: 38px;
-        height: 30px;
-        min-height: 30px;
+        width: 100px;
+        height: 38px;
+        min-height: 38px;
         justify-content: center;
-        padding: 0;
-        flex-shrink: 0;
     }
 
     .header-search {
@@ -1695,9 +1694,9 @@ html {
     }
 
     .action-buttons .search-class {
-        height: 30px;
-        min-height: 30px;
-        width: clamp(32px, 12vw, 38px);
+        width: 100px;
+        height: 38px;
+        min-height: 38px;
     }
 
     .header-search {
