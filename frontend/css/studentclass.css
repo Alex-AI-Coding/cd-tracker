@@ -302,6 +302,33 @@ body {
   white-space: pre-wrap;
 }
 
+.announcement-card-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 2px;
+}
+
+.announcement-attachment-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-muted);
+  background: rgba(88, 166, 255, 0.08);
+  color: var(--fg);
+  text-decoration: none;
+  font-size: 12px;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.announcement-attachment-link:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(88, 166, 255, 0.14);
+}
+
 .announcement-empty {
   border: 1px dashed var(--border);
   border-radius: var(--radius-md);

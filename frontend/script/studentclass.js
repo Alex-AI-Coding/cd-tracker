@@ -350,12 +350,18 @@
 
   async function loadAnnouncements() {
     try {
-      const res = await apiClient.request(
-        `/classrooms/${encodeURIComponent(classroomId)}/announcements`,
-        { method: 'GET' },
-        { redirectOnUnauthorized: false }
-      );
-      state.announcements = normalizeAnnouncementCollection(res);
+      let res = null;
+      if (apiClient?.classroom?.listAnnouncements) {
+        res = await apiClient.classroom.listAnnouncements(classroomId);
+      } else if (apiClient?.request) {
+        res = await apiClient.request(
+          `/classroom/${encodeURIComponent(classroomId)}/announcement`,
+          { method: 'GET' },
+          { redirectOnUnauthorized: false }
+        );
+      }
+      state.announcements = normalizeAnnouncementCollection(res)
+        .filter((announcement) => !announcement.classroomId || announcement.classroomId === classroomId);
       if (state.announcements.length) {
         cacheAnnouncements(classroomId, state.announcements);
       }
@@ -408,6 +414,10 @@
           <span>${escapeHtml(formatAnnouncementTime(announcement.createdAt))}</span>
         </div>
         <div class="announcement-card-message">${escapeHtml(announcement.message || '')}</div>
+        ${announcement.attachments.length ? `
+          <div class="announcement-card-attachments">
+            ${announcement.attachments.map((attachment) => renderAnnouncementAttachment(attachment)).join('')}
+          </div>` : ''}
       </article>
     `).join('');
   }
@@ -431,10 +441,50 @@
     if (!item || typeof item !== 'object') return null;
     return {
       announcementId: String(item.announcementId || ''),
+      classroomId: String(item.classroomId || ''),
       message: String(item.message || ''),
       createdAt: String(item.createdAt || ''),
-      attachments: Array.isArray(item.attachments) ? item.attachments : []
+      attachments: Array.isArray(item.attachments)
+        ? item.attachments.map(normalizeAttachment).filter(Boolean)
+        : []
     };
+  }
+
+  function normalizeAttachment(item) {
+    if (!item || typeof item !== 'object') return null;
+    return {
+      attachmentId: String(item.attachmentId || ''),
+      url: String(item.url || ''),
+      type: String(item.type || ''),
+      resourceType: String(item.resourceType || ''),
+    };
+  }
+
+  function getAttachmentLabel(attachment) {
+    const resourceType = String(attachment?.resourceType || '').trim();
+    const type = String(attachment?.type || '').trim();
+    const url = String(attachment?.url || '').trim();
+    if (resourceType) return resourceType;
+    if (type) return type;
+    if (url) {
+      try {
+        const pathname = new URL(url, window.location.origin).pathname;
+        const last = pathname.split('/').filter(Boolean).pop();
+        if (last) return decodeURIComponent(last);
+      } catch (_) {}
+    }
+    return 'Attachment';
+  }
+
+  function renderAnnouncementAttachment(attachment) {
+    const url = String(attachment?.url || '').trim();
+    if (!url) return '';
+    const label = getAttachmentLabel(attachment);
+    return `
+      <a class="announcement-attachment-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" download>
+        <i class="fas fa-download"></i>
+        <span>${escapeHtml(label)}</span>
+      </a>`;
   }
 
   function cacheKeyForClassroom(id) { return `ct_announcements_${String(id || '')}`; }
