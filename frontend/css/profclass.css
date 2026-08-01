@@ -1117,7 +1117,7 @@ body.modal-open {
     padding-left: 12px;
     display: grid;
     align-content: start;
-    gap: 8px;
+    gap: 6px;
 }
 
 .announcement-item-side-label {
@@ -1125,7 +1125,7 @@ body.modal-open {
     align-items: center;
     gap: 6px;
     color: #8b949e;
-    font-size: 11px;
+    font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
@@ -1137,27 +1137,27 @@ body.modal-open {
 .announcement-item-attachments {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
     overflow-x: hidden;
 }
 
 .announcement-item-empty-attachments {
     color: #8b949e;
-    font-size: 12px;
-    padding: 8px 0;
+    font-size: 10px;
+    padding: 6px 0;
 }
 
 .announcement-attachment-link {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 5px 9px;
+    padding: 4px 8px;
     border-radius: 999px;
     border: 1px solid #30363d;
     background: #161b22;
     color: #c9d1d9;
     text-decoration: none;
-    font-size: 12px;
+    font-size: 10px;
 }
 
 .announcement-attachment-link:hover {
@@ -1189,7 +1189,7 @@ body.modal-open {
 .announcement-attachment-media video {
     display: block;
     width: 100%;
-    height: 104px;
+    height: 74px;
     object-fit: cover;
     background: #0d1117;
 }
@@ -1202,13 +1202,17 @@ body.modal-open {
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 7px 9px;
-    font-size: 11px;
+    padding: 6px 8px;
+    font-size: 10px;
     line-height: 1.3;
 }
 
 .announcement-attachment-media-caption i {
     color: #58a6ff;
+}
+
+.announcement-item-side .announcement-attachment-media {
+    max-width: 150px;
 }
 
 .announcement-feed-shell {
