@@ -360,6 +360,28 @@
     return formData;
   }
 
+  function createAnnouncementEditFormData(payload = {}, newAttachments = [], attachmentIdsToRemove = []) {
+    const formData = new FormData();
+
+    if (payload && typeof payload === "object" && Object.keys(payload).length) {
+      Object.entries(payload).forEach(([key, value]) => {
+        if (value == null) return;
+        formData.append(key, String(value));
+      });
+    }
+
+    Array.from(newAttachments || []).forEach((file) => {
+      formData.append("newAttachments", file);
+    });
+
+    Array.from(attachmentIdsToRemove || []).forEach((attachmentId) => {
+      if (!attachmentId) return;
+      formData.append("attachmentIdsToRemove", attachmentId);
+    });
+
+    return formData;
+  }
+
   const dialogState = {
     queue: Promise.resolve(),
     mounted: false,
@@ -659,6 +681,22 @@
     listAnnouncements(classroomId) {
       return request(`/classroom/${encodeURIComponent(classroomId)}/announcement`, {
         method: "GET",
+        headers: { Accept: "application/json" }
+      });
+    },
+
+    editAnnouncement(classroomId, announcementId, payload = {}, newAttachments = [], attachmentIdsToRemove = []) {
+      const formData = createAnnouncementEditFormData(payload, newAttachments, attachmentIdsToRemove);
+      return request(`/classroom/${encodeURIComponent(classroomId)}/announcement/${encodeURIComponent(announcementId)}`, {
+        method: "PATCH",
+        headers: { Accept: "application/json" },
+        body: formData
+      });
+    },
+
+    deleteAnnouncement(classroomId, announcementId) {
+      return request(`/classroom/${encodeURIComponent(classroomId)}/announcement/${encodeURIComponent(announcementId)}`, {
+        method: "DELETE",
         headers: { Accept: "application/json" }
       });
     }

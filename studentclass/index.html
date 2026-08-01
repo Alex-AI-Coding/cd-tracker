@@ -88,59 +88,60 @@
       </div>
 
       <!-- ── Assignments Section ─────────────────────────── -->
-      <section class="announcements-section" id="announcementsSection">
-        <div class="announcements-header">
-          <h2 class="section-heading">
-            <i class="fas fa-bullhorn"></i>
-            Announcements
-          </h2>
-        </div>
-        <div id="studentAnnouncementsList" class="announcements-list">
-          <div class="announcement-empty">
-            <i class="fas fa-bullhorn"></i>
-            <p>No announcements yet.</p>
-          </div>
-        </div>
-      </section>
+      <div class="classroom-columns">
+        <div class="classroom-main-column">
+          <div class="assignments-section">
+            <div class="assignments-toolbar">
+              <h2 class="section-heading">
+                <i class="fas fa-tasks"></i>
+                Assignments
+              </h2>
 
-      <div class="assignments-section">
+              <div class="toolbar-controls">
+                <div class="tab-group">
+                  <button class="tab-btn active" data-tab="needs-submission">
+                    <i class="fas fa-code-branch"></i>
+                    Needs Repo
+                    <span class="tab-badge" id="tabNeedsCount">0</span>
+                  </button>
+                  <button class="tab-btn" data-tab="tracked">
+                    <i class="fas fa-check-circle"></i>
+                    Tracked
+                    <span class="tab-badge" id="tabTrackedCount">0</span>
+                  </button>
+                </div>
+              </div>
+            </div>
 
-        <!-- Toolbar: title + tabs + filter all on one row -->
-        <div class="assignments-toolbar">
-          <h2 class="section-heading">
-            <i class="fas fa-tasks"></i>
-            Assignments
-          </h2>
-
-          <div class="toolbar-controls">
-            <!-- Tabs -->
-            <div class="tab-group">
-              <button class="tab-btn active" data-tab="needs-submission">
-                <i class="fas fa-code-branch"></i>
-                Needs Repo
-                <span class="tab-badge" id="tabNeedsCount">0</span>
-              </button>
-              <button class="tab-btn" data-tab="tracked">
-                <i class="fas fa-check-circle"></i>
-                Tracked
-                <span class="tab-badge" id="tabTrackedCount">0</span>
-              </button>
+            <div id="assignmentsList">
+              <div class="tracked-filter-group" id="trackedFilterGroup">
+                <span class="tracked-filter-label">Tracked filter:</span>
+                <button class="tracked-filter-btn active" data-tracked-filter="ALL">All</button>
+                <button class="tracked-filter-btn" data-tracked-filter="SUBMITTED">Has Submitted</button>
+                <button class="tracked-filter-btn" data-tracked-filter="NOT_SUBMITTED">Not Submitted</button>
+                <button class="tracked-filter-btn" data-tracked-filter="GRADED">Graded</button>
+              </div>
+              <div id="activitiesContainer" class="activities-container"></div>
             </div>
           </div>
         </div>
 
-        <!-- Assignment cards render here -->
-        <div id="assignmentsList">
-          <div class="tracked-filter-group" id="trackedFilterGroup">
-            <span class="tracked-filter-label">Tracked filter:</span>
-            <button class="tracked-filter-btn active" data-tracked-filter="ALL">All</button>
-            <button class="tracked-filter-btn" data-tracked-filter="SUBMITTED">Has Submitted</button>
-            <button class="tracked-filter-btn" data-tracked-filter="NOT_SUBMITTED">Not Submitted</button>
-            <button class="tracked-filter-btn" data-tracked-filter="GRADED">Graded</button>
-          </div>
-          <div id="activitiesContainer" class="activities-container"></div>
+        <div class="classroom-side-column">
+          <section class="announcements-section" id="announcementsSection">
+            <div class="announcements-header">
+              <h2 class="section-heading">
+                <i class="fas fa-bullhorn"></i>
+                Announcements
+              </h2>
+            </div>
+            <div id="studentAnnouncementsList" class="announcements-list">
+              <div class="announcement-empty">
+                <i class="fas fa-bullhorn"></i>
+                <p>No announcements yet.</p>
+              </div>
+            </div>
+          </section>
         </div>
-
       </div>
     </div><!-- end page-wrapper -->
 

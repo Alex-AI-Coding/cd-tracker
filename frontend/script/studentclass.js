@@ -350,12 +350,18 @@
 
   async function loadAnnouncements() {
     try {
-      const res = await apiClient.request(
-        `/classrooms/${encodeURIComponent(classroomId)}/announcements`,
-        { method: 'GET' },
-        { redirectOnUnauthorized: false }
-      );
-      state.announcements = normalizeAnnouncementCollection(res);
+      let res = null;
+      if (apiClient?.classroom?.listAnnouncements) {
+        res = await apiClient.classroom.listAnnouncements(classroomId);
+      } else if (apiClient?.request) {
+        res = await apiClient.request(
+          `/classroom/${encodeURIComponent(classroomId)}/announcement`,
+          { method: 'GET' },
+          { redirectOnUnauthorized: false }
+        );
+      }
+      state.announcements = normalizeAnnouncementCollection(res)
+        .filter((announcement) => !announcement.classroomId || announcement.classroomId === classroomId);
       if (state.announcements.length) {
         cacheAnnouncements(classroomId, state.announcements);
       }
@@ -408,6 +414,10 @@
           <span>${escapeHtml(formatAnnouncementTime(announcement.createdAt))}</span>
         </div>
         <div class="announcement-card-message">${escapeHtml(announcement.message || '')}</div>
+        ${announcement.attachments.length ? `
+          <div class="announcement-card-attachments">
+            ${announcement.attachments.map((attachment) => renderAnnouncementAttachment(attachment)).join('')}
+          </div>` : ''}
       </article>
     `).join('');
   }
@@ -431,10 +441,94 @@
     if (!item || typeof item !== 'object') return null;
     return {
       announcementId: String(item.announcementId || ''),
+      classroomId: String(item.classroomId || ''),
       message: String(item.message || ''),
       createdAt: String(item.createdAt || ''),
-      attachments: Array.isArray(item.attachments) ? item.attachments : []
+      attachments: Array.isArray(item.attachments)
+        ? item.attachments.map(normalizeAttachment).filter(Boolean)
+        : []
     };
+  }
+
+  function normalizeAttachment(item) {
+    if (!item || typeof item !== 'object') return null;
+    return {
+      attachmentId: String(item.attachmentId || ''),
+      url: String(item.url || ''),
+      type: String(item.type || ''),
+      resourceType: String(item.resourceType || ''),
+    };
+  }
+
+  function getAttachmentLabel(attachment) {
+    const resourceType = String(attachment?.resourceType || '').trim();
+    const type = String(attachment?.type || '').trim();
+    const url = String(attachment?.url || '').trim();
+    if (resourceType) return resourceType;
+    if (type) return type;
+    if (url) {
+      try {
+        const pathname = new URL(url, window.location.origin).pathname;
+        const last = pathname.split('/').filter(Boolean).pop();
+        if (last) return decodeURIComponent(last);
+      } catch (_) {}
+    }
+    return 'Attachment';
+  }
+
+  function getAttachmentKind(attachment) {
+    const value = String(attachment?.type || attachment?.resourceType || '').trim().toLowerCase();
+    if (value.includes('image')) return 'image';
+    if (value.includes('video')) return 'video';
+    const url = String(attachment?.url || '').trim().toLowerCase();
+    if (/\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?$/.test(url)) return 'image';
+    if (/\.(mp4|webm|mov|avi|mkv)(\?.*)?$/.test(url)) return 'video';
+    return 'file';
+  }
+
+  function getAttachmentKindLabel(kind) {
+    if (kind === 'image') return 'image';
+    if (kind === 'video') return 'video';
+    return 'attachment';
+  }
+
+  function renderAnnouncementAttachment(attachment) {
+    const url = String(attachment?.url || '').trim();
+    if (!url) return '';
+    const label = getAttachmentLabel(attachment);
+    const kind = getAttachmentKind(attachment);
+
+    if (kind === 'image') {
+      return `
+        <a class="announcement-attachment-media" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" download>
+          <img class="announcement-attachment-preview" src="${escapeHtml(url)}" alt="${escapeHtml(label)}">
+          <span class="announcement-attachment-body">
+            <i class="fas fa-image"></i>
+            <span>${escapeHtml(getAttachmentKindLabel(kind))}</span>
+            <i class="fas fa-download"></i>
+          </span>
+        </a>`;
+    }
+
+    if (kind === 'video') {
+      return `
+        <div class="announcement-attachment-media">
+          <video class="announcement-attachment-preview" controls playsinline preload="metadata" src="${escapeHtml(url)}"></video>
+          <a class="announcement-attachment-body" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" download>
+            <i class="fas fa-video"></i>
+            <span>${escapeHtml(getAttachmentKindLabel(kind))}</span>
+            <i class="fas fa-download"></i>
+          </a>
+        </div>`;
+    }
+
+    return `
+      <a class="announcement-attachment-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" download>
+        <span class="announcement-attachment-body">
+          <i class="fas fa-download"></i>
+          <span>${escapeHtml(label)}</span>
+        </span>
+      </a>`;
   }
 
   function cacheKeyForClassroom(id) { return `ct_announcements_${String(id || '')}`; }
