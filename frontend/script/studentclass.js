@@ -476,14 +476,52 @@
     return 'Attachment';
   }
 
+  function getAttachmentKind(attachment) {
+    const value = String(attachment?.type || attachment?.resourceType || '').trim().toLowerCase();
+    if (value.includes('image')) return 'image';
+    if (value.includes('video')) return 'video';
+    const url = String(attachment?.url || '').trim().toLowerCase();
+    if (/\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?$/.test(url)) return 'image';
+    if (/\.(mp4|webm|mov|avi|mkv)(\?.*)?$/.test(url)) return 'video';
+    return 'file';
+  }
+
   function renderAnnouncementAttachment(attachment) {
     const url = String(attachment?.url || '').trim();
     if (!url) return '';
     const label = getAttachmentLabel(attachment);
+    const kind = getAttachmentKind(attachment);
+
+    if (kind === 'image') {
+      return `
+        <a class="announcement-attachment-media" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" download>
+          <img class="announcement-attachment-preview" src="${escapeHtml(url)}" alt="${escapeHtml(label)}">
+          <span class="announcement-attachment-body">
+            <i class="fas fa-image"></i>
+            <span>${escapeHtml(label)}</span>
+            <i class="fas fa-download"></i>
+          </span>
+        </a>`;
+    }
+
+    if (kind === 'video') {
+      return `
+        <div class="announcement-attachment-media">
+          <video class="announcement-attachment-preview" controls playsinline preload="metadata" src="${escapeHtml(url)}"></video>
+          <a class="announcement-attachment-body" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" download>
+            <i class="fas fa-video"></i>
+            <span>${escapeHtml(label)}</span>
+            <i class="fas fa-download"></i>
+          </a>
+        </div>`;
+    }
+
     return `
       <a class="announcement-attachment-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" download>
-        <i class="fas fa-download"></i>
-        <span>${escapeHtml(label)}</span>
+        <span class="announcement-attachment-body">
+          <i class="fas fa-download"></i>
+          <span>${escapeHtml(label)}</span>
+        </span>
       </a>`;
   }
 
