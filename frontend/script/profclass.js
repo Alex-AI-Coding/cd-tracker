@@ -40,11 +40,14 @@ const ANNOUNCEMENT_ALLOWED_EXTENSIONS = new Set([
   "pdf",
 ]);
 let selectedAnnouncementFiles = [];
+let selectedEditAnnouncementFiles = [];
+let selectedEditAnnouncementAttachmentIds = new Set();
 const ANNOUNCEMENT_CACHE_PREFIX = "ct_announcements_";
 
 const state = {
   classroomId: null,
   currentUser: null,
+  announcements: [],
   activities: [],
   students: [],
   submittedByActivity: {},
@@ -53,6 +56,7 @@ const state = {
   submissionFilter: "ALL",
   activityFilter: "all",
   currentDetailRow: null,
+  editingAnnouncementId: null,
 };
 
 // Add this at the beginning of your DOMContentLoaded event listener
@@ -132,6 +136,10 @@ function setupEventListeners() {
   );
   const viewAnnouncementsBtn = document.getElementById("viewAnnouncementsBtn");
   const announcementsModal = document.getElementById("announcementsModal");
+  const editAnnouncementMessage = document.getElementById("editAnnouncementMessage");
+  const editAnnouncementAttachments = document.getElementById("editAnnouncementAttachments");
+  const editAnnouncementModal = document.getElementById("editAnnouncementModal");
+  const announcementsList = document.getElementById("announcementsList");
 
   if (createBtn) {
     createBtn.addEventListener("click", () => {
@@ -262,6 +270,24 @@ function setupEventListeners() {
     });
   }
 
+  if (announcementsList) {
+    announcementsList.addEventListener("click", async (event) => {
+      const button = event.target.closest("[data-announcement-action]");
+      if (!button) return;
+
+      const announcementId = asString(button.getAttribute("data-announcement-id"));
+      const action = asString(button.getAttribute("data-announcement-action")).toLowerCase();
+
+      if (!announcementId) return;
+
+      if (action === "edit") {
+        openEditAnnouncementModal(announcementId);
+      } else if (action === "delete") {
+        await handleDeleteAnnouncement(announcementId);
+      }
+    });
+  }
+
   if (announcementsModal) {
     announcementsModal.addEventListener("click", (event) => {
       if (event.target === announcementsModal) {
@@ -269,6 +295,40 @@ function setupEventListeners() {
       }
     });
   }
+
+  if (editAnnouncementMessage) {
+    editAnnouncementMessage.addEventListener("input", updateEditAnnouncementCharCount);
+    updateEditAnnouncementCharCount();
+  }
+
+  if (editAnnouncementAttachments) {
+    editAnnouncementAttachments.addEventListener("change", () => {
+      const files = Array.from(editAnnouncementAttachments.files || []);
+      const invalidFiles = getInvalidAnnouncementFiles(files);
+      if (invalidFiles.length) {
+        showNotification(`Unsupported attachment: ${invalidFiles[0].name || "file"}.`, "error");
+        editAnnouncementAttachments.value = "";
+        selectedEditAnnouncementFiles = [];
+        renderEditAnnouncementAttachmentList([]);
+        return;
+      }
+
+      selectedEditAnnouncementFiles = files;
+      renderEditAnnouncementAttachmentList(selectedEditAnnouncementFiles);
+    });
+  }
+
+  if (editAnnouncementModal) {
+    editAnnouncementModal.addEventListener("click", (event) => {
+      if (event.target === editAnnouncementModal) {
+        closeModal("editAnnouncementModal");
+      }
+    });
+  }
+
+  document.getElementById("saveEditAnnouncementBtn")?.addEventListener("click", async () => {
+    await handleEditAnnouncement();
+  });
 
   if (assignmentsList) {
     assignmentsList.addEventListener("click", async (event) => {
@@ -1703,8 +1763,18 @@ async function loadAnnouncements(silent = false) {
     announcements = readCachedAnnouncements(state.classroomId);
   }
 
+  state.announcements = announcements;
   renderAnnouncements(container, announcements);
   return announcements;
+}
+
+function getAnnouncementById(announcementId) {
+  const targetId = asString(announcementId);
+  return state.announcements.find(
+    (item) => asString(item?.announcementId) === targetId,
+  ) || readCachedAnnouncements(state.classroomId).find(
+    (item) => asString(item?.announcementId) === targetId,
+  ) || null;
 }
 
 function openEditActivityModal(activityId) {
@@ -1940,6 +2010,10 @@ function closeModal(modalId) {
             document.body.classList.remove('modal-open');
         }
     }, 220);
+
+    if (modalId === "editAnnouncementModal") {
+      resetAnnouncementEditState();
+    }
 }
 
 function showNotification(message, type = "info") {
@@ -2035,8 +2109,11 @@ function normalizeAnnouncement(item) {
   if (!item || typeof item !== "object") return null;
   return {
     announcementId: asString(item.announcementId),
+    classroomId: asString(item.classroomId),
+    authorId: asString(item.authorId),
     message: asString(item.message),
     createdAt: asString(item.createdAt),
+    updatedAt: asString(item.updatedAt),
     attachments: Array.isArray(item.attachments)
       ? item.attachments.map(normalizeAttachment).filter(Boolean)
       : [],
@@ -2092,16 +2169,38 @@ function renderAnnouncements(container, announcements) {
 
   container.innerHTML = announcements.map((announcement) => {
     const attachments = Array.isArray(announcement.attachments) ? announcement.attachments : [];
+    const hasEditedTimestamp = Boolean(
+      announcement.updatedAt &&
+      announcement.createdAt &&
+      announcement.updatedAt !== announcement.createdAt,
+    );
+    const message = asString(announcement.message) || "No message provided.";
     return `
-      <article class="announcement-item">
+      <article class="announcement-item" data-announcement-id="${escapeHtml(announcement.announcementId)}">
         <div class="announcement-item-head">
-          <div class="announcement-item-title">
-            <i class="fas fa-bullhorn"></i>
-            <span>Announcement</span>
+          <div class="announcement-item-title-wrap">
+            <div class="announcement-item-title">
+              <i class="fas fa-bullhorn"></i>
+              <span>Announcement</span>
+            </div>
+            <div class="announcement-item-meta">
+              <span><i class="fas fa-paper-plane"></i> Posted</span>
+              ${hasEditedTimestamp ? '<span><i class="fas fa-pen-to-square"></i> Edited</span>' : ''}
+            </div>
           </div>
-          <span class="announcement-item-time">${escapeHtml(formatAnnouncementTime(announcement.createdAt))}</span>
+          <div class="announcement-item-actions">
+            <button type="button" class="announcement-item-action" data-announcement-action="edit" data-announcement-id="${escapeHtml(announcement.announcementId)}">
+              <i class="fas fa-pen-to-square"></i>
+              Edit
+            </button>
+            <button type="button" class="announcement-item-action danger" data-announcement-action="delete" data-announcement-id="${escapeHtml(announcement.announcementId)}">
+              <i class="fas fa-trash-can"></i>
+              Delete
+            </button>
+          </div>
         </div>
-        <div class="announcement-item-message">${escapeHtml(announcement.message)}</div>
+        <span class="announcement-item-time">${escapeHtml(formatAnnouncementTime(announcement.createdAt))}</span>
+        <div class="announcement-item-message">${escapeHtml(message)}</div>
         ${attachments.length ? `
           <div class="announcement-item-attachments">
             ${attachments.map((attachment) => `
@@ -2113,6 +2212,241 @@ function renderAnnouncements(container, announcements) {
           </div>` : ""}
       </article>`;
   }).join("");
+}
+
+function resetAnnouncementEditState() {
+  state.editingAnnouncementId = null;
+  selectedEditAnnouncementFiles = [];
+  selectedEditAnnouncementAttachmentIds = new Set();
+
+  const form = document.getElementById("editAnnouncementForm");
+  if (form) form.reset();
+
+  const modal = document.getElementById("editAnnouncementModal");
+  if (modal) {
+    delete modal.dataset.originalMessage;
+  }
+
+  updateEditAnnouncementCharCount();
+  renderEditAnnouncementAttachmentList([]);
+  renderExistingAnnouncementAttachments(null);
+}
+
+function updateEditAnnouncementCharCount() {
+  const message = asString(getInputValue("editAnnouncementMessage"));
+  const counter = document.getElementById("editAnnouncementCharCount");
+  if (!counter) return;
+
+  counter.textContent = `${message.length} / ${ANNOUNCEMENT_MAX_MESSAGE_LENGTH}`;
+  counter.classList.toggle(
+    "is-warning",
+    message.length > ANNOUNCEMENT_MAX_MESSAGE_LENGTH * 0.9,
+  );
+}
+
+function renderExistingAnnouncementAttachments(announcement) {
+  const container = document.getElementById("editAnnouncementCurrentAttachments");
+  if (!container) return;
+
+  const attachments = Array.isArray(announcement?.attachments) ? announcement.attachments : [];
+  if (!attachments.length) {
+    container.innerHTML = `
+      <div class="announcement-empty-attachments">
+        No attachments on this announcement.
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = attachments.map((attachment) => `
+    <label class="announcement-existing-attachment">
+      <input
+        type="checkbox"
+        data-attachment-id="${escapeHtml(attachment.attachmentId)}"
+      >
+      <div class="announcement-existing-attachment-main">
+        <strong>${escapeHtml(getAttachmentLabel(attachment))}</strong>
+        <small>${escapeHtml(attachment.url)}</small>
+      </div>
+      <span class="announcement-existing-attachment-remove">Remove</span>
+    </label>
+  `).join("");
+}
+
+function renderEditAnnouncementAttachmentList(files) {
+  const container = document.getElementById("editAnnouncementAttachmentList");
+  if (!container) return;
+
+  if (!files.length) {
+    container.innerHTML = "";
+    return;
+  }
+
+  container.innerHTML = files
+    .map((file) => {
+      const type = getAnnouncementFileType(file);
+      return `
+        <div class="announcement-attachment-item">
+          <i class="${escapeHtml(getAnnouncementFileIcon(type))}"></i>
+          <span>${escapeHtml(file.name)}</span>
+          <small>${escapeHtml(type)}</small>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+function openEditAnnouncementModal(announcementId) {
+  const announcement = getAnnouncementById(announcementId);
+  if (!announcement) {
+    showNotification("Announcement not found.", "error");
+    return;
+  }
+
+  state.editingAnnouncementId = announcement.announcementId;
+  selectedEditAnnouncementFiles = [];
+  selectedEditAnnouncementAttachmentIds = new Set();
+
+  setInputValue("editAnnouncementId", announcement.announcementId);
+  setInputValue("editAnnouncementMessage", announcement.message || "");
+
+  const modal = document.getElementById("editAnnouncementModal");
+  if (modal) {
+    modal.dataset.originalMessage = announcement.message || "";
+  }
+
+  const attachmentsInput = document.getElementById("editAnnouncementAttachments");
+  if (attachmentsInput) {
+    attachmentsInput.value = "";
+  }
+
+  updateEditAnnouncementCharCount();
+  renderEditAnnouncementAttachmentList([]);
+  renderExistingAnnouncementAttachments(announcement);
+  openModal("editAnnouncementModal");
+}
+
+async function handleEditAnnouncement() {
+  const announcementId = asString(getInputValue("editAnnouncementId"));
+  const message = asString(getInputValue("editAnnouncementMessage"));
+  const attachmentsInput = document.getElementById("editAnnouncementAttachments");
+  const newAttachments = selectedEditAnnouncementFiles.length
+    ? [...selectedEditAnnouncementFiles]
+    : Array.from(attachmentsInput?.files || []);
+  const button = document.getElementById("saveEditAnnouncementBtn");
+  const modal = document.getElementById("editAnnouncementModal");
+  const originalMessage = asString(modal?.dataset?.originalMessage);
+
+  if (!announcementId) {
+    showNotification("Announcement ID is missing.", "error");
+    return;
+  }
+
+  const attachmentIdsToRemove = Array.from(
+    document.querySelectorAll("#editAnnouncementCurrentAttachments [data-attachment-id]:checked"),
+  ).map((input) => asString(input.getAttribute("data-attachment-id"))).filter(Boolean);
+
+  const messageChanged = message !== originalMessage;
+  if (!messageChanged && !newAttachments.length && !attachmentIdsToRemove.length) {
+    showNotification("Add a change before saving the announcement.", "error");
+    return;
+  }
+
+  if (message.length > ANNOUNCEMENT_MAX_MESSAGE_LENGTH) {
+    showNotification("Announcement message must be 5000 characters or less.", "error");
+    return;
+  }
+
+  const invalidFiles = getInvalidAnnouncementFiles(newAttachments);
+  if (invalidFiles.length) {
+    showNotification(`Unsupported attachment: ${invalidFiles[0].name || "file"}.`, "error");
+    return;
+  }
+
+  if (!window.ApiClient?.classroom?.editAnnouncement) {
+    showNotification("Announcement API is not initialized.", "error");
+    return;
+  }
+
+  if (button) {
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+  }
+
+  try {
+    const payload = {};
+    if (messageChanged) {
+      payload.message = message;
+    }
+
+    await window.ApiClient.classroom.editAnnouncement(
+      state.classroomId,
+      announcementId,
+      payload,
+      newAttachments,
+      attachmentIdsToRemove,
+    );
+
+    closeModal("editAnnouncementModal");
+    showNotification("Announcement updated successfully.", "success");
+    await loadAnnouncements(true);
+  } catch (error) {
+    console.error("Failed to update announcement:", error);
+    showNotification(error?.message || "Failed to update announcement.", "error");
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+    }
+  }
+}
+
+async function handleDeleteAnnouncement(announcementId) {
+  const targetId = asString(announcementId);
+  if (!targetId) {
+    showNotification("Announcement ID is missing.", "error");
+    return;
+  }
+
+  const announcement = getAnnouncementById(targetId);
+  const message = announcement?.message ? announcement.message.slice(0, 120) : "this announcement";
+  const confirmed = await window.AppDialog?.confirm?.(
+    `Delete ${message}${announcement?.message && announcement.message.length > 120 ? "..." : ""}? This cannot be undone.`,
+    {
+      title: "Delete Announcement",
+      confirmText: "Delete",
+      danger: true,
+    },
+  );
+
+  if (!confirmed) return;
+
+  const button = Array.from(
+    document.querySelectorAll('[data-announcement-action="delete"]'),
+  ).find((element) => asString(element.getAttribute("data-announcement-id")) === targetId);
+
+  if (button) {
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+  }
+
+  try {
+    if (!window.ApiClient?.classroom?.deleteAnnouncement) {
+      throw new Error("Announcement API is not initialized.");
+    }
+
+    await window.ApiClient.classroom.deleteAnnouncement(state.classroomId, targetId);
+    showNotification("Announcement deleted successfully.", "success");
+    await loadAnnouncements(true);
+  } catch (error) {
+    console.error("Failed to delete announcement:", error);
+    showNotification(error?.message || "Failed to delete announcement.", "error");
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.innerHTML = '<i class="fas fa-trash-can"></i> Delete';
+    }
+  }
 }
 
 function formatAnnouncementTime(value) {

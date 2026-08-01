@@ -54,7 +54,7 @@
                     </h2>
                     <button class="announcement-view-btn" id="viewAnnouncementsBtn" type="button">
                         <i class="fas fa-list"></i>
-                        View Posted
+                        Manage Announcements
                     </button>
                 </div>
                 <form id="announcementForm" class="announcement-form">
@@ -96,6 +96,12 @@
                         <button class="close-btn" id="closeAnnouncementsModalBtn" data-close-modal="announcementsModal">&times;</button>
                     </div>
                     <div class="modal-body">
+                        <div class="announcement-modal-toolbar">
+                            <div class="announcement-modal-note">
+                                <i class="fas fa-pen-to-square"></i>
+                                Create new announcements from the form above, then edit or delete older posts here.
+                            </div>
+                        </div>
                         <div id="announcementsList" class="announcements-list">
                             <div class="empty-state compact">
                                 <i class="fas fa-bullhorn"></i>
@@ -105,6 +111,56 @@
                     </div>
                     <div class="modal-footer">
                         <button class="btn btn-secondary" id="closeAnnouncementsBtn" data-close-modal="announcementsModal">Close</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal" id="editAnnouncementModal">
+                <div class="modal-content announcement-edit-modal-content">
+                    <div class="modal-header">
+                        <h2>
+                            <i class="fas fa-pen-to-square"></i>
+                            Edit Announcement
+                        </h2>
+                        <button class="close-btn" id="closeEditAnnouncementModalBtn" data-close-modal="editAnnouncementModal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editAnnouncementForm" class="announcement-form announcement-form-modal">
+                            <input type="hidden" id="editAnnouncementId">
+                            <div class="form-group">
+                                <label for="editAnnouncementMessage">
+                                    <i class="fas fa-message"></i>
+                                    Message
+                                </label>
+                                <textarea id="editAnnouncementMessage" maxlength="5000" rows="5" placeholder="Update the announcement message..."></textarea>
+                                <div class="announcement-meta-row">
+                                    <span>Images, PDF, audio, and video only</span>
+                                    <span id="editAnnouncementCharCount">0 / 5000</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <i class="fas fa-paperclip"></i>
+                                    Current Attachments
+                                </label>
+                                <div id="editAnnouncementCurrentAttachments" class="announcement-existing-attachments"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="editAnnouncementAttachments">
+                                    <i class="fas fa-folder-open"></i>
+                                    Add Attachments
+                                </label>
+                                <input type="file" id="editAnnouncementAttachments" multiple accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.svg,.mp4,.webm,.mov,.avi,.mkv,.mp3,.wav,.ogg,.aac,.pdf,image/jpeg,image/png,image/gif,image/webp,image/bmp,image/svg+xml,video/mp4,video/webm,video/quicktime,video/x-msvideo,video/x-matroska,audio/mpeg,audio/wav,audio/ogg,audio/aac,application/pdf">
+                                <div id="editAnnouncementAttachmentList" class="announcement-attachment-list"></div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" id="cancelEditAnnouncementBtn" data-close-modal="editAnnouncementModal">Cancel</button>
+                        <button class="btn btn-primary" id="saveEditAnnouncementBtn">
+                            <i class="fas fa-save"></i>
+                            Save Changes
+                        </button>
                     </div>
                 </div>
             </div>

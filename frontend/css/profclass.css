@@ -905,29 +905,61 @@ body.modal-open {
 }
 
 .announcement-modal-content {
+    width: 920px;
+    max-width: 96%;
+}
+
+.announcement-edit-modal-content {
     width: 760px;
     max-width: 96%;
 }
 
+.announcement-modal-toolbar {
+    margin-bottom: 14px;
+}
+
+.announcement-modal-note {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    background: rgba(13, 17, 23, 0.88);
+    color: #8b949e;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.announcement-modal-note i {
+    color: #58a6ff;
+    margin-top: 1px;
+}
+
 .announcements-list {
     display: grid;
-    gap: 10px;
+    gap: 12px;
 }
 
 .announcement-item {
     border: 1px solid #21262d;
-    border-radius: 8px;
-    background: #0d1117;
-    padding: 12px;
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgba(13, 17, 23, 0.98), rgba(13, 17, 23, 0.9));
+    padding: 14px;
     display: grid;
-    gap: 8px;
+    gap: 12px;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.18);
+}
+
+.announcement-item:hover {
+    border-color: #30363d;
 }
 
 .announcement-item-head {
     display: flex;
     justify-content: space-between;
     gap: 12px;
-    align-items: center;
+    align-items: flex-start;
 }
 
 .announcement-item-title {
@@ -936,21 +968,75 @@ body.modal-open {
     gap: 8px;
     color: #e6edf3;
     font-weight: 600;
+    min-width: 0;
 }
 
 .announcement-item-title i {
     color: #58a6ff;
 }
 
+.announcement-item-title-wrap {
+    min-width: 0;
+    display: grid;
+    gap: 4px;
+}
+
+.announcement-item-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 11px;
+    color: #8b949e;
+}
+
+.announcement-item-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
 .announcement-item-time {
     color: #8b949e;
     font-size: 11px;
+    white-space: nowrap;
+    margin-left: auto;
+}
+
+.announcement-item-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.announcement-item-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    background: #0d1117;
+    color: #c9d1d9;
+    padding: 6px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.announcement-item-action:hover {
+    border-color: #58a6ff;
+    color: #58a6ff;
+}
+
+.announcement-item-action.danger:hover {
+    border-color: rgba(248, 81, 73, 0.45);
+    color: #ff9b95;
 }
 
 .announcement-item-message {
     color: #c9d1d9;
     white-space: pre-wrap;
-    line-height: 1.5;
+    line-height: 1.55;
+    font-size: 13px;
 }
 
 .announcement-item-attachments {
@@ -975,6 +1061,64 @@ body.modal-open {
 .announcement-attachment-link:hover {
     border-color: #58a6ff;
     color: #58a6ff;
+}
+
+.announcement-existing-attachments {
+    display: grid;
+    gap: 8px;
+}
+
+.announcement-existing-attachment {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    background: #0d1117;
+}
+
+.announcement-existing-attachment input {
+    margin-top: 2px;
+}
+
+.announcement-existing-attachment-main {
+    flex: 1;
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+}
+
+.announcement-existing-attachment-main strong {
+    color: #e6edf3;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.announcement-existing-attachment-main small {
+    color: #8b949e;
+    font-size: 11px;
+}
+
+.announcement-existing-attachment-remove {
+    color: #f85149;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.announcement-empty-attachments {
+    color: #8b949e;
+    font-size: 12px;
+    padding: 10px 0;
+}
+
+.announcement-form-modal {
+    display: grid;
+    gap: 8px;
 }
 
 .form-row {
@@ -2391,6 +2535,19 @@ a.submission-repo-link:hover {
 
     .status-row {
         gap: 6px;
+    }
+
+    .announcement-item-head {
+        flex-direction: column;
+    }
+
+    .announcement-item-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .announcement-item-time {
+        margin-left: 0;
     }
     
 }
