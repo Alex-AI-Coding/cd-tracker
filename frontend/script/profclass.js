@@ -2158,11 +2158,11 @@ function renderAnnouncementAttachmentList(files) {
       return `
         <div class="announcement-attachment-item">
           <i class="${escapeHtml(getAnnouncementFileIcon(type))}"></i>
-          <span title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</span>
-          <small>${escapeHtml(formatAnnouncementFileSize(file.size))}</small>
-          <button type="button" class="announcement-attachment-remove-btn" data-remove-edit-announcement-file="${escapeHtml(getAnnouncementFileKey(file))}" aria-label="Remove ${escapeHtml(file.name)}" title="Remove file">
+          <button type="button" class="announcement-attachment-remove-btn" data-remove-announcement-file="${escapeHtml(getAnnouncementFileKey(file))}" aria-label="Remove ${escapeHtml(file.name)}" title="Remove file">
             <i class="fas fa-xmark"></i>
           </button>
+          <span title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</span>
+          <small>${escapeHtml(formatAnnouncementFileSize(file.size))}</small>
         </div>
       `;
     })
@@ -2289,15 +2289,48 @@ function renderAnnouncements(container, announcements) {
         <div class="announcement-item-message">${escapeHtml(message)}</div>
         ${attachments.length ? `
           <div class="announcement-item-attachments">
-            ${attachments.map((attachment) => `
-              <a class="announcement-attachment-link" href="${escapeHtml(attachment.url)}" target="_blank" rel="noopener noreferrer">
-                <i class="${escapeHtml(getAttachmentIcon(attachment.type))}"></i>
-                <span>${escapeHtml(getAttachmentLabel(attachment))}</span>
-              </a>
-            `).join("")}
+            ${attachments.map((attachment) => renderAnnouncementAttachmentPreview(attachment)).join("")}
           </div>` : ""}
       </article>`;
   }).join("");
+}
+
+function renderAnnouncementAttachmentPreview(attachment) {
+  const type = asString(attachment?.type).toUpperCase();
+  const url = asString(attachment?.url);
+  const label = getAttachmentLabel(attachment);
+  if (!url) return "";
+
+  if (type === "IMAGE") {
+    return `
+      <a class="announcement-attachment-media announcement-attachment-media-image" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">
+        <img src="${escapeHtml(url)}" alt="${escapeHtml(label)}">
+        <span class="announcement-attachment-media-caption">
+          <i class="${escapeHtml(getAttachmentIcon(type))}"></i>
+          <span>${escapeHtml(label)}</span>
+        </span>
+      </a>
+    `;
+  }
+
+  if (type === "VIDEO") {
+    return `
+      <div class="announcement-attachment-media announcement-attachment-media-video">
+        <video controls preload="metadata" src="${escapeHtml(url)}"></video>
+        <span class="announcement-attachment-media-caption">
+          <i class="${escapeHtml(getAttachmentIcon(type))}"></i>
+          <span>${escapeHtml(label)}</span>
+        </span>
+      </div>
+    `;
+  }
+
+  return `
+    <a class="announcement-attachment-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">
+      <i class="${escapeHtml(getAttachmentIcon(type))}"></i>
+      <span>${escapeHtml(label)}</span>
+    </a>
+  `;
 }
 
 function resetAnnouncementEditState() {
@@ -2374,11 +2407,11 @@ function renderEditAnnouncementAttachmentList(files) {
       return `
         <div class="announcement-attachment-item">
           <i class="${escapeHtml(getAnnouncementFileIcon(type))}"></i>
-          <span title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</span>
-          <small>${escapeHtml(formatAnnouncementFileSize(file.size))}</small>
           <button type="button" class="announcement-attachment-remove-btn" data-remove-edit-announcement-file="${escapeHtml(getAnnouncementFileKey(file))}" aria-label="Remove ${escapeHtml(file.name)}" title="Remove file">
             <i class="fas fa-xmark"></i>
           </button>
+          <span title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</span>
+          <small>${escapeHtml(formatAnnouncementFileSize(file.size))}</small>
         </div>
       `;
     })
