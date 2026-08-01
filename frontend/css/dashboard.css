@@ -1678,11 +1678,7 @@ html {
     .logo { font-size: 14px; gap: 6px; }
     .logo i { font-size: 17px; }
     .logo-text {
-        display: block;
-        max-width: 92px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        display: none;
     }
 
     .header-divider, .header-label, .user-info { display: none; }
