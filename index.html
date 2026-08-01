@@ -1,72 +1,64 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-  <!-- CodeTracker theme: set before paint to prevent flashing -->
-  <script id="codetracker-theme-init">
-    (() => {
-      const key = "codetracker-theme";
-      let saved = null;
-      try { saved = localStorage.getItem(key); } catch (_) {}
-      const system = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
-      document.documentElement.dataset.theme = saved === "light" || saved === "dark" ? saved : system;
-    })();
-  </script>
-
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>CodeTracker — Sign In</title>
-  <link rel="icon" type="image/png" href="/frontend/asset/git.png">
 
-  <script>
-    (() => {
-      const storageKey = "codetracker-theme";
-      let savedTheme = null;
-
-      try {
-        savedTheme = localStorage.getItem(storageKey);
-      } catch (_) {
-        savedTheme = null;
-      }
-
-      const systemTheme = window.matchMedia("(prefers-color-scheme: light)").matches
-        ? "light"
-        : "dark";
-
-      document.documentElement.dataset.theme =
-        savedTheme === "light" || savedTheme === "dark"
-          ? savedTheme
-          : systemTheme;
-    })();
-  </script>
-<link rel="stylesheet" href="frontend/css/style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link rel="stylesheet" href="/frontend/css/theme.css" data-codetracker-theme>
-</head>
-<body>
-  <button
-    class="theme-toggle"
-    id="themeToggle"
-    type="button"
-    aria-label="Switch color theme"
-    aria-pressed="false"
+  <link
+    rel="icon"
+    type="image/png"
+    href="/frontend/asset/git.png"
   >
-    <i class="fa-solid fa-sun" id="themeToggleIcon" aria-hidden="true"></i>
-    <span id="themeToggleText">Light mode</span>
-  </button>
 
+  <link
+    rel="stylesheet"
+    href="frontend/css/style.css"
+  >
+
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+  >
+
+  <!--
+    Keep the shared variables available because style.css uses them,
+    but force this login page to remain in its original dark theme.
+  -->
+  <link
+    rel="stylesheet"
+    href="/frontend/css/theme.css"
+    data-codetracker-theme
+  >
+</head>
+
+<body>
   <div class="login-page">
+
     <!-- Left panel — branding -->
     <div class="brand-panel">
       <div class="brand-inner">
+
         <div class="brand-logo">
-          <i class="fab fa-github"></i>
+          <i class="fab fa-github" aria-hidden="true"></i>
           <span>CodeTracker</span>
         </div>
 
-        <h1 class="brand-heading">Track. Manage.<br>Collaborate.</h1>
-        <p class="brand-sub">An all-in-one classroom management platform powered by GitHub.</p>
+        <h1 class="brand-heading">
+          Track. Manage.<br>
+          Collaborate.
+        </h1>
 
-        <section class="platform-note" id="platformNote" data-expanded="false">
+        <p class="brand-sub">
+          An all-in-one classroom management platform powered by GitHub.
+        </p>
+
+        <section
+          class="platform-note"
+          id="platformNote"
+          data-expanded="false"
+        >
           <button
             class="note-toggle"
             id="platformNoteToggle"
@@ -78,49 +70,96 @@
             <span class="note-state" aria-hidden="true"></span>
           </button>
 
-          <div class="note-body" id="platformNoteBody" aria-hidden="true">
+          <div
+            class="note-body"
+            id="platformNoteBody"
+            aria-hidden="true"
+          >
             <div class="note-body-inner">
               <p>
-                This platform encourages students to actively use version control systems, helping them build habits aligned with real-world development practices.
+                This platform encourages students to actively use version
+                control systems, helping them build habits aligned with
+                real-world development practices.
               </p>
+
               <p>
-                By integrating industry-standard tools, the school ensures students gain practical experience that mirrors professional workflows while helping professors and instructors monitor and track project activity more efficiently.
+                By integrating industry-standard tools, the school ensures
+                students gain practical experience that mirrors professional
+                workflows while helping professors and instructors monitor
+                and track project activity more efficiently.
               </p>
             </div>
           </div>
         </section>
 
         <ul class="feature-list">
-          <li><i class="fa-solid fa-circle-check"></i> Create and manage your own classes</li>
-          <li><i class="fa-solid fa-circle-check"></i> Join classes with unique codes</li>
-          <li><i class="fa-solid fa-circle-check"></i> Automated GitHub activity tracking</li>
-          <li><i class="fa-solid fa-circle-check"></i> Syntax check supports Python, Java, C, and C++</li>
+          <li>
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            Create and manage your own classes
+          </li>
+
+          <li>
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            Join classes with unique codes
+          </li>
+
+          <li>
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            Automated GitHub activity tracking
+          </li>
+
+          <li>
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            Syntax check supports Python, Java, C, and C++
+          </li>
         </ul>
+
       </div>
     </div>
 
     <!-- Right panel — sign-in form -->
     <div class="login-container">
       <div class="login-box">
-        <h2>Sign in</h2>
-        <p class="login-sub">Welcome! — let's get started.</p>
 
-        <button id="githubLogin" class="github-btn">
-          <i class="fab fa-github"></i>
+        <h2>Sign in</h2>
+
+        <p class="login-sub">
+          Welcome! — let's get started.
+        </p>
+
+        <button
+          id="githubLogin"
+          class="github-btn"
+          type="button"
+        >
+          <i class="fab fa-github" aria-hidden="true"></i>
           <span>Login with GitHub</span>
         </button>
 
         <p class="below">
           By continuing, you acknowledge our
-          <a class="policy-link" href="/privacy/" target="_self" rel="noopener noreferrer">Privacy Policy</a>
+          <a
+            class="policy-link"
+            href="/privacy/"
+            target="_self"
+            rel="noopener noreferrer"
+          >
+            Privacy Policy
+          </a>
           and agree to occasional product updates.
         </p>
+
       </div>
     </div>
+
   </div>
 
   <script src="frontend/script/api-client.js"></script>
-<script src="frontend/script/script.js"></script>
-  <script src="/frontend/script/theme.js" data-codetracker-theme></script>
+  <script src="frontend/script/script.js"></script>
+
+  <!--
+    theme.js is deliberately not loaded on the login page.
+    Authenticated pages will continue loading it.
+  -->
 </body>
 </html>
