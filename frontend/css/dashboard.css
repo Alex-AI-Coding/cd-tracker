@@ -103,7 +103,7 @@ html {
     .search-class {
         width: 38px;
         height: auto;
-        min-height: 38px;
+        min-height: calc(38px - 10px);
         justify-content: center;
         padding: 0;
         flex-shrink: 0;
