@@ -97,15 +97,20 @@ html {
     }
 
     .action-buttons .btn {
-        min-height: 38px;
+        height: 30px;
+        min-height: 30px;
     }
 
     .create-class,
     .search-class {
         width: 100px;
-        height: 38px;
-        min-height: 38px;
+        height: 30px;
+        min-height: 30px;
         justify-content: center;
+    }
+
+    .search-class i {
+        font-size: 8px;
     }
 
     .header-search {
@@ -1690,13 +1695,14 @@ html {
     }
 
     .action-buttons .btn {
-        min-height: 38px;
+        height: 30px;
+        min-height: 30px;
     }
 
     .action-buttons .search-class {
         width: 100px;
-        height: 38px;
-        min-height: 38px;
+        height: 30px;
+        min-height: 30px;
     }
 
     .header-search {
