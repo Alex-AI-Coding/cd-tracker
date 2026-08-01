@@ -39,6 +39,8 @@ const ANNOUNCEMENT_ALLOWED_EXTENSIONS = new Set([
   "aac",
   "pdf",
 ]);
+const ANNOUNCEMENT_MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+const ANNOUNCEMENT_MAX_REQUEST_SIZE_BYTES = 10 * 1024 * 1024;
 let selectedAnnouncementFiles = [];
 let selectedEditAnnouncementFiles = [];
 let selectedEditAnnouncementAttachmentIds = new Set();
@@ -238,10 +240,20 @@ function setupEventListeners() {
         return;
       }
 
+      const oversized = getOversizedAnnouncementFiles(files);
+      if (oversized.length) {
+        announcementAttachments.value = "";
+        showNotification(
+          `Each attachment must be 5 MB or smaller. ${oversized[0].name || "A file"} is too large.`,
+          "error",
+        );
+        return;
+      }
+
       const existingKeys = new Set(
         selectedAnnouncementFiles.map((file) => getAnnouncementFileKey(file)),
       );
-      selectedAnnouncementFiles = [
+      const nextFiles = [
         ...selectedAnnouncementFiles,
         ...files.filter((file) => {
           const key = getAnnouncementFileKey(file);
@@ -250,6 +262,13 @@ function setupEventListeners() {
           return true;
         }),
       ];
+      if (getAnnouncementRequestSize(nextFiles) > ANNOUNCEMENT_MAX_REQUEST_SIZE_BYTES) {
+        announcementAttachments.value = "";
+        showNotification("Announcement uploads must total 10 MB or less.", "error");
+        return;
+      }
+
+      selectedAnnouncementFiles = nextFiles;
 
       renderAnnouncementAttachmentList(selectedAnnouncementFiles);
       announcementAttachments.value = "";
@@ -313,6 +332,17 @@ function setupEventListeners() {
         return;
       }
 
+      const oversized = getOversizedAnnouncementFiles(files);
+      if (oversized.length) {
+        editAnnouncementAttachments.value = "";
+        selectedEditAnnouncementFiles = [];
+        showNotification(
+          `Each attachment must be 5 MB or smaller. ${oversized[0].name || "A file"} is too large.`,
+          "error",
+        );
+        return;
+      }
+
       selectedEditAnnouncementFiles = files;
       renderEditAnnouncementAttachmentList(selectedEditAnnouncementFiles);
     });
@@ -328,6 +358,32 @@ function setupEventListeners() {
 
   document.getElementById("saveEditAnnouncementBtn")?.addEventListener("click", async () => {
     await handleEditAnnouncement();
+  });
+
+  document.getElementById("announcementAttachmentList")?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-remove-announcement-file]");
+    if (!button) return;
+
+    const fileKey = asString(button.getAttribute("data-remove-announcement-file"));
+    if (!fileKey) return;
+
+    selectedAnnouncementFiles = selectedAnnouncementFiles.filter(
+      (file) => getAnnouncementFileKey(file) !== fileKey,
+    );
+    renderAnnouncementAttachmentList(selectedAnnouncementFiles);
+  });
+
+  document.getElementById("editAnnouncementAttachmentList")?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-remove-edit-announcement-file]");
+    if (!button) return;
+
+    const fileKey = asString(button.getAttribute("data-remove-edit-announcement-file"));
+    if (!fileKey) return;
+
+    selectedEditAnnouncementFiles = selectedEditAnnouncementFiles.filter(
+      (file) => getAnnouncementFileKey(file) !== fileKey,
+    );
+    renderEditAnnouncementAttachmentList(selectedEditAnnouncementFiles);
   });
 
   if (assignmentsList) {
@@ -2057,6 +2113,14 @@ function getInvalidAnnouncementFiles(files) {
   return files.filter((file) => !isValidAnnouncementFile(file));
 }
 
+function getOversizedAnnouncementFiles(files) {
+  return files.filter((file) => Number(file?.size) > ANNOUNCEMENT_MAX_FILE_SIZE_BYTES);
+}
+
+function getAnnouncementRequestSize(files) {
+  return Array.from(files || []).reduce((total, file) => total + Number(file?.size || 0), 0);
+}
+
 function isValidAnnouncementFile(file) {
   if (!file) return false;
 
@@ -2094,8 +2158,11 @@ function renderAnnouncementAttachmentList(files) {
       return `
         <div class="announcement-attachment-item">
           <i class="${escapeHtml(getAnnouncementFileIcon(type))}"></i>
-          <span>${escapeHtml(file.name)}</span>
-          <small>${escapeHtml(type)}</small>
+          <span title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</span>
+          <small>${escapeHtml(formatAnnouncementFileSize(file.size))}</small>
+          <button type="button" class="announcement-attachment-remove-btn" data-remove-edit-announcement-file="${escapeHtml(getAnnouncementFileKey(file))}" aria-label="Remove ${escapeHtml(file.name)}" title="Remove file">
+            <i class="fas fa-xmark"></i>
+          </button>
         </div>
       `;
     })
@@ -2307,12 +2374,24 @@ function renderEditAnnouncementAttachmentList(files) {
       return `
         <div class="announcement-attachment-item">
           <i class="${escapeHtml(getAnnouncementFileIcon(type))}"></i>
-          <span>${escapeHtml(file.name)}</span>
-          <small>${escapeHtml(type)}</small>
+          <span title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</span>
+          <small>${escapeHtml(formatAnnouncementFileSize(file.size))}</small>
+          <button type="button" class="announcement-attachment-remove-btn" data-remove-edit-announcement-file="${escapeHtml(getAnnouncementFileKey(file))}" aria-label="Remove ${escapeHtml(file.name)}" title="Remove file">
+            <i class="fas fa-xmark"></i>
+          </button>
         </div>
       `;
     })
     .join("");
+}
+
+function formatAnnouncementFileSize(size) {
+  const bytes = Number(size || 0);
+  if (!Number.isFinite(bytes) || bytes <= 0) return "0 KB";
+  const mb = bytes / (1024 * 1024);
+  if (mb >= 1) return `${mb.toFixed(mb >= 10 ? 0 : 1)} MB`;
+  const kb = bytes / 1024;
+  return `${kb.toFixed(kb >= 10 ? 0 : 1)} KB`;
 }
 
 function openEditAnnouncementModal(announcementId) {

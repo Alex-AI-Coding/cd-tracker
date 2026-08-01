@@ -881,6 +881,30 @@ body.modal-open {
     font-weight: 700;
 }
 
+.announcement-attachment-remove-btn {
+    width: 24px;
+    height: 24px;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    background: #161b22;
+    color: #8b949e;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.announcement-attachment-remove-btn:hover {
+    border-color: rgba(248, 81, 73, 0.5);
+    color: #f85149;
+    background: rgba(248, 81, 73, 0.08);
+}
+
+.announcement-attachment-remove-btn i {
+    font-size: 10px;
+}
+
 .announcement-actions {
     display: flex;
     justify-content: flex-end;
