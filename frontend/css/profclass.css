@@ -940,6 +940,10 @@ body.modal-open {
     gap: 12px;
 }
 
+.right-column .announcement-feed-shell {
+    gap: 10px;
+}
+
 .announcement-feed-header {
     display: flex;
     align-items: center;
@@ -1005,6 +1009,10 @@ body.modal-open {
     max-height: min(68vh, 720px);
     overflow-y: auto;
     padding-right: 4px;
+}
+
+.right-column .announcements-list {
+    max-height: 280px;
 }
 
 .announcement-item {
@@ -1213,6 +1221,32 @@ body.modal-open {
 
 .announcement-item-side .announcement-attachment-media {
     max-width: 150px;
+}
+
+.right-column .announcement-item {
+    grid-template-columns: 1fr;
+    padding: 10px;
+    gap: 10px;
+}
+
+.right-column .announcement-item-side {
+    border-left: 0;
+    border-top: 1px solid #21262d;
+    padding-left: 0;
+    padding-top: 10px;
+}
+
+.right-column .announcement-item-side .announcement-attachment-media {
+    max-width: 100%;
+}
+
+.right-column .announcement-attachment-media img,
+.right-column .announcement-attachment-media video {
+    height: 68px;
+}
+
+.right-column .announcement-item-message {
+    font-size: 12px;
 }
 
 .announcement-feed-shell {
