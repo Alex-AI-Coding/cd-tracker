@@ -186,3 +186,175 @@ html[data-theme="dark"] .ct-needs-grading__action { color: #fbbf24; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* ================================================================
+   Theme menu: mobile positioning, readable wrapping and contrast
+================================================================ */
+
+.theme-control {
+  left: max(16px, env(safe-area-inset-left)) !important;
+  bottom: max(16px, env(safe-area-inset-bottom)) !important;
+  max-width: calc(100vw - 32px);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.theme-control .theme-toggle {
+  min-width: 0 !important;
+  max-width: min(230px, calc(100vw - 32px)) !important;
+  white-space: nowrap;
+}
+
+.theme-toggle__chevron {
+  flex: 0 0 auto;
+}
+
+.theme-menu {
+  box-sizing: border-box;
+  width: clamp(220px, 72vw, 280px);
+  max-width: calc(100vw - 32px);
+  max-height: min(62dvh, 360px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 8px;
+  color: var(--color-text) !important;
+  background: var(--color-surface) !important;
+  border-color: var(--color-border) !important;
+  box-shadow: var(--shadow-floating, 0 18px 45px rgba(0, 0, 0, .2));
+}
+
+@supports not (height: 1dvh) {
+  .theme-menu {
+    max-height: min(62vh, 360px);
+  }
+}
+
+.theme-menu button {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 54px;
+  grid-template-columns: 26px minmax(0, 1fr) 18px;
+  gap: 9px;
+  padding: 9px 10px;
+  color: var(--color-text) !important;
+  line-height: 1.25;
+  white-space: normal;
+}
+
+.theme-menu button > i:first-child,
+.theme-menu__check {
+  flex: 0 0 auto;
+}
+
+.theme-menu button span {
+  min-width: 0;
+  overflow: visible;
+}
+
+.theme-menu button strong,
+.theme-menu button small {
+  display: block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  white-space: normal;
+}
+
+.theme-menu button strong {
+  color: var(--color-heading) !important;
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.theme-menu button small {
+  color: var(--color-muted) !important;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.theme-menu button:hover,
+.theme-menu button:focus-visible,
+.theme-menu button.is-selected {
+  color: var(--color-heading) !important;
+  background: var(--color-surface-hover) !important;
+}
+
+html[data-theme="light"] .theme-menu {
+  background: #ffffff !important;
+  border-color: #b8c2cc !important;
+}
+
+html[data-theme="light"] .theme-menu button strong {
+  color: #1f2328 !important;
+}
+
+html[data-theme="light"] .theme-menu button small {
+  color: #4b5563 !important;
+}
+
+html[data-theme="light"] .theme-menu button:hover,
+html[data-theme="light"] .theme-menu button:focus-visible,
+html[data-theme="light"] .theme-menu button.is-selected {
+  background: #edf2f7 !important;
+}
+
+@media (max-width: 640px) {
+  .theme-control {
+    left: max(12px, env(safe-area-inset-left)) !important;
+    bottom: max(12px, env(safe-area-inset-bottom)) !important;
+    max-width: calc(100vw - 24px);
+  }
+
+  .theme-control .theme-toggle {
+    width: 46px !important;
+    min-width: 46px !important;
+    max-width: 46px !important;
+    height: 46px !important;
+    min-height: 46px !important;
+    padding: 0 !important;
+    gap: 0;
+  }
+
+  .theme-control .theme-toggle #themeToggleText,
+  .theme-control .theme-toggle .theme-toggle__chevron {
+    display: none !important;
+  }
+
+  .theme-control .theme-toggle .theme-toggle__icon {
+    width: auto;
+    margin: 0;
+    font-size: 17px;
+  }
+
+  .theme-menu {
+    left: 0;
+    right: auto;
+    bottom: calc(100% + 8px);
+    width: min(280px, calc(100vw - 24px));
+    max-width: calc(100vw - 24px);
+    border-radius: 13px;
+  }
+}
+
+@media (max-width: 340px) {
+  .theme-menu {
+    width: calc(100vw - 16px);
+    max-width: calc(100vw - 16px);
+  }
+
+  .theme-control {
+    left: max(8px, env(safe-area-inset-left)) !important;
+  }
+
+  .theme-menu button {
+    grid-template-columns: 24px minmax(0, 1fr) 16px;
+    gap: 7px;
+    padding: 8px;
+  }
+}
+
+@media (max-height: 520px) and (orientation: landscape) {
+  .theme-menu {
+    max-height: calc(100dvh - 80px);
+  }
+}

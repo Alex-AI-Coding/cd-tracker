@@ -452,3 +452,209 @@ html[data-theme="light"] .supported-badge {
     animation-iteration-count: 1 !important;
   }
 }
+
+/* ================================================================
+   Mobile layout and light-mode contrast hardening
+   Added for authenticated CodeTracker pages.
+================================================================ */
+
+html[data-theme="light"] {
+  /* Darker secondary text keeps helper copy readable on white cards. */
+  --color-muted: #4b5563;
+  --color-subtle: #53606d;
+  --color-subtle-text: #57606a;
+  --color-border: #c7d0d9;
+  --color-border-strong: #9da8b3;
+  --color-surface-hover: #edf1f5;
+  --color-surface-raised: #f2f5f8;
+}
+
+html[data-theme="light"] :where(
+  .welcome-subtitle,
+  .students-subtitle,
+  .section-subtitle,
+  .activity-description,
+  .assignment-description,
+  .class-description,
+  .announcement-meta-row,
+  .announcement-item-meta,
+  .announcement-item-time,
+  .profile-info small,
+  .form-hint,
+  .helper-text,
+  .supporting-text,
+  .meta-label,
+  .stat-label,
+  .empty-state,
+  .progress-label-row,
+  .modal-subtitle,
+  .chat-message-meta
+) {
+  color: var(--color-muted) !important;
+  opacity: 1 !important;
+}
+
+html[data-theme="light"] :where(
+  .welcome-container,
+  .tutorial-card,
+  .announcement-item,
+  .announcement-attachment-media,
+  .activity-card,
+  .student-card,
+  .classroom-card,
+  .submission-card,
+  .details-card
+) {
+  color: var(--color-text) !important;
+  background-color: var(--color-surface) !important;
+  border-color: var(--color-border) !important;
+}
+
+html[data-theme="light"] :where(
+  .welcome-container h1,
+  .welcome-container p,
+  .tutorial-icon,
+  .floating-dropdown-btn::after,
+  .announcement-item-message,
+  .announcement-attachment-media,
+  .announcement-attachment-media:hover
+) {
+  color: var(--color-heading) !important;
+}
+
+html[data-theme="light"] :where(
+  .floating-dropdown-btn,
+  .welcome-hide-btn,
+  .toggle-password
+) {
+  color: var(--color-heading) !important;
+  background-color: var(--color-surface) !important;
+  border-color: var(--color-border) !important;
+}
+
+html[data-theme="light"] :where(
+  .announcement-item-action,
+  .announcement-attachment-link,
+  .announcement-attachment-media
+) {
+  color: var(--color-text) !important;
+  background-color: var(--color-surface) !important;
+  border-color: var(--color-border) !important;
+}
+
+html[data-theme="light"] :where(
+  .announcement-item-action:hover,
+  .announcement-attachment-link:hover,
+  .announcement-attachment-media:hover
+) {
+  color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  background-color: var(--color-primary-soft) !important;
+}
+
+html[data-theme="light"] :where(
+  .status-chip.pending,
+  .status-pill.pending,
+  .activity-status-chip.pending,
+  .activity-status-chip.draft
+) {
+  color: #7a4b00 !important;
+  background: #fff4d6 !important;
+  border-color: #d8a84f !important;
+}
+
+html[data-theme="light"] :where(
+  .status-chip.submitted,
+  .status-pill.submitted,
+  .activity-status-chip.submitted,
+  .activity-status-chip.published
+) {
+  color: #0757a6 !important;
+  background: #e7f2ff !important;
+  border-color: #79aee8 !important;
+}
+
+html[data-theme="light"] :where(
+  .status-chip.graded,
+  .status-pill.graded,
+  .activity-status-chip.graded,
+  .activity-status-chip.closed
+) {
+  color: #146c2e !important;
+  background: #e7f7ec !important;
+  border-color: #76bd88 !important;
+}
+
+html[data-theme="light"] :where(
+  .status-chip.late,
+  .status-pill.late,
+  .assignment-menu-item.danger
+) {
+  color: #b4232f !important;
+}
+
+html[data-theme="light"] :where(
+  .status-chip.none,
+  .activity-status-chip.archived,
+  .activity-status-chip.none
+) {
+  color: #4b5563 !important;
+  background: #eef1f4 !important;
+  border-color: #aeb7c1 !important;
+}
+
+html[data-theme="light"] :where(
+  .btn.cancel,
+  .btn-secondary,
+  .tab-button,
+  .tab-btn,
+  .tracked-filter-btn,
+  .dropdown-btn,
+  .assignment-menu-item
+) {
+  color: var(--color-text) !important;
+}
+
+html[data-theme="light"] :where(
+  .modal-content,
+  .profile-dropdown,
+  .professor-dropdown,
+  .dropdown-menu
+) {
+  color: var(--color-text) !important;
+}
+
+html[data-theme="light"] :where(code, pre, .code-block, .syntax-code) {
+  color: #1f2328 !important;
+  background-color: #f0f3f6 !important;
+  border-color: var(--color-border) !important;
+}
+
+/* Several page styles use desktop zoom. Disable it on smaller screens so
+   fixed menus, text and modal measurements remain inside the viewport. */
+@media (max-width: 768px) {
+  html {
+    zoom: 1 !important;
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    min-width: 0 !important;
+    overflow-x: hidden;
+  }
+
+  :where(.modal-content, .profile-dropdown, .professor-dropdown, .dropdown-menu) {
+    max-width: calc(100vw - 24px) !important;
+  }
+}
+
+@media (max-width: 420px) {
+  :where(h1, .welcome-title) {
+    overflow-wrap: anywhere;
+  }
+
+  :where(.btn, button, select, input, textarea) {
+    max-width: 100%;
+  }
+}
