@@ -1,21 +1,15 @@
 (function initializeEchoChatbot() {
   "use strict";
 
-  const INSTANCE_KEY = "__CODETRACKER_ECHO_INSTANCE_V2__";
+  const INSTANCE_KEY = "__CODETRACKER_ECHO_INSTANCE_V3__";
 
   if (window[INSTANCE_KEY]) {
-    window[INSTANCE_KEY].ensureVisible?.();
+    window[INSTANCE_KEY].ensureAvailable?.();
     return;
   }
 
-  // Reserve the singleton immediately so duplicate script tags cannot
-  // register a second set of listeners before DOMContentLoaded.
-  window[INSTANCE_KEY] = Object.freeze({
-    ensureVisible() {}
-  });
-
   const BOT_NAME = "Echo";
-  const UI_VERSION = "2";
+  const UI_VERSION = "3";
   const DEFAULT_API_BASE_URL = "https://codetracker-production-ab72.up.railway.app/api";
   const HISTORY_VERSION = 2;
   const HISTORY_LIMIT = 80;
@@ -23,21 +17,15 @@
   const MESSAGE_CHARACTER_LIMIT = 12000;
   const REQUEST_TIMEOUT_MS = 35000;
   const GUEST_HISTORY_KEY = `ct_echo_history_guest_v${HISTORY_VERSION}`;
-  const LAYOUT_KEY = "ct_echo_layout_v2";
-  const LEGACY_LAYOUT_KEY = "ct_echo_layout_v1";
-  const DRAG_THRESHOLD = 6;
-  const DESKTOP_MARGIN = 16;
-  const MOBILE_MARGIN = 8;
+  const LAYOUT_KEY = "ct_echo_layout_v3";
+  const LEGACY_LAYOUT_KEYS = ["ct_echo_layout_v1", "ct_echo_layout_v2"];
+  const COMPACT_VIEWPORT_WIDTH = 700;
 
-  const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+  let publicApi = {
+    ensureAvailable() {}
+  };
 
-  function clamp(value, minimum, maximum) {
-    return Math.min(Math.max(value, minimum), maximum);
-  }
-
-  function isFiniteNumber(value) {
-    return typeof value === "number" && Number.isFinite(value);
-  }
+  window[INSTANCE_KEY] = publicApi;
 
   function normalizeBaseUrl(value) {
     const candidate = String(value || "").trim();
@@ -85,13 +73,7 @@
 
   function safeReadJson(key, fallback) {
     try {
-      const raw = localStorage.getItem(key);
-
-      if (!raw) {
-        return fallback;
-      }
-
-      const value = JSON.parse(raw);
+      const value = JSON.parse(localStorage.getItem(key) || "null");
       return value ?? fallback;
     } catch (_) {
       return fallback;
@@ -111,7 +93,7 @@
     try {
       localStorage.removeItem(key);
     } catch (_) {
-      // Storage can be unavailable in private or restricted browser modes.
+      // Storage can be unavailable in private or restricted browser contexts.
     }
   }
 
@@ -122,25 +104,19 @@
       .slice(0, 80);
   }
 
-  function getClassroomId() {
-    const path = window.location.pathname.toLowerCase();
+  function clamp(value, minimum, maximum) {
+    return Math.min(Math.max(value, minimum), maximum);
+  }
 
-    if (!path.includes("/profclass/") && !path.includes("/studentclass/")) {
-      return null;
-    }
+  function isFiniteNumber(value) {
+    return typeof value === "number" && Number.isFinite(value);
+  }
 
-    const params = new URLSearchParams(window.location.search);
-
-    try {
-      return (
-        params.get("classroomId") ||
-        params.get("id") ||
-        localStorage.getItem("classroomId") ||
-        localStorage.getItem("currentClassroomId") ||
-        null
-      );
-    } catch (_) {
-      return params.get("classroomId") || params.get("id") || null;
+  function whenReady(callback) {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", callback, { once: true });
+    } else {
+      callback();
     }
   }
 
@@ -152,6 +128,31 @@
       }).format(new Date(timestamp));
     } catch (_) {
       return "";
+    }
+  }
+
+  function getClassroomId() {
+    const path = window.location.pathname.toLowerCase();
+
+    if (!path.includes("/profclass/") && !path.includes("/studentclass/")) {
+      return null;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const fromQuery = params.get("classroomId") || params.get("id");
+
+    if (fromQuery) {
+      return fromQuery;
+    }
+
+    try {
+      return (
+        localStorage.getItem("classroomId") ||
+        localStorage.getItem("currentClassroomId") ||
+        null
+      );
+    } catch (_) {
+      return null;
     }
   }
 
@@ -169,77 +170,36 @@
     }
   }
 
-  function whenReady(callback) {
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", callback, { once: true });
-    } else {
-      callback();
-    }
-  }
-
-  function getViewportBounds() {
-    const viewport = window.visualViewport;
-    const left = viewport?.offsetLeft || 0;
-    const top = viewport?.offsetTop || 0;
-    const width = viewport?.width || window.innerWidth;
-    const height = viewport?.height || window.innerHeight;
-
-    return {
-      left,
-      top,
-      width,
-      height,
-      right: left + width,
-      bottom: top + height
-    };
-  }
-
-  function isCompactViewport() {
-    const viewport = getViewportBounds();
-    return viewport.width <= 600 || viewport.height <= 520;
-  }
-
-  function getViewportMargin() {
-    return isCompactViewport() ? MOBILE_MARGIN : DESKTOP_MARGIN;
-  }
-
-  function sanitizeHistoryItem(item) {
-    if (!item || (item.role !== "user" && item.role !== "assistant")) {
-      return null;
-    }
-
-    const text = String(item.text || "").trim().slice(0, MESSAGE_CHARACTER_LIMIT);
-
-    if (!text) {
-      return null;
-    }
-
-    return {
-      role: item.role,
-      text,
-      timestamp: Number.isFinite(Number(item.timestamp))
-        ? Number(item.timestamp)
-        : Date.now()
-    };
-  }
-
   function trimHistory(items) {
-    const sanitized = items
-      .map(sanitizeHistoryItem)
-      .filter(Boolean)
-      .slice(-HISTORY_LIMIT);
+    const normalized = Array.isArray(items)
+      ? items
+          .filter((item) => {
+            return (
+              item &&
+              (item.role === "user" || item.role === "assistant") &&
+              typeof item.text === "string" &&
+              item.text.trim()
+            );
+          })
+          .map((item) => ({
+            role: item.role,
+            text: item.text.slice(0, MESSAGE_CHARACTER_LIMIT),
+            timestamp: Number(item.timestamp) || Date.now()
+          }))
+      : [];
 
-    let totalCharacters = sanitized.reduce((sum, item) => sum + item.text.length, 0);
+    let result = normalized.slice(-HISTORY_LIMIT);
+    let characterCount = result.reduce((total, item) => total + item.text.length, 0);
 
-    while (sanitized.length > 1 && totalCharacters > HISTORY_CHARACTER_LIMIT) {
-      const removed = sanitized.shift();
-      totalCharacters -= removed.text.length;
+    while (result.length > 1 && characterCount > HISTORY_CHARACTER_LIMIT) {
+      characterCount -= result[0].text.length;
+      result.shift();
     }
 
-    return sanitized;
+    return result;
   }
 
-  function safelyPersistHistory(key, items) {
+  function persistHistory(key, items) {
     let candidate = trimHistory(items);
 
     while (candidate.length) {
@@ -254,6 +214,31 @@
     return [];
   }
 
+  function sanitizeLayout(value) {
+    const layout = {};
+
+    if (!value || typeof value !== "object") {
+      return layout;
+    }
+
+    if (isFiniteNumber(value.width)) {
+      layout.width = clamp(value.width, 310, 1200);
+    }
+
+    if (isFiniteNumber(value.height)) {
+      layout.height = clamp(value.height, 360, 1200);
+    }
+
+    layout.maximized = Boolean(value.maximized);
+    layout.minimized = Boolean(value.minimized);
+
+    return layout;
+  }
+
+  function isCompactViewport() {
+    return window.matchMedia(`(max-width: ${COMPACT_VIEWPORT_WIDTH}px)`).matches;
+  }
+
   whenReady(() => {
     const existingContainer = document.getElementById("chatbot-container");
 
@@ -265,20 +250,34 @@
       document.body.insertAdjacentHTML(
         "beforeend",
         `
-          <div id="chatbot-container" data-bot-name="${BOT_NAME}" data-echo-version="${UI_VERSION}">
+          <div
+            id="chatbot-container"
+            data-bot-name="${BOT_NAME}"
+            data-echo-version="${UI_VERSION}"
+          >
             <button
               id="chatbot-toggle"
               type="button"
               aria-label="Open ${BOT_NAME}"
               aria-expanded="false"
               aria-controls="chatbot-window"
-              aria-grabbed="false"
               title="Open ${BOT_NAME}"
             >
               <span class="chatbot-toggle-content">
                 <i class="fas fa-robot" aria-hidden="true"></i>
                 <span class="chatbot-toggle-label">${BOT_NAME}</span>
               </span>
+            </button>
+
+            <button
+              id="chatbot-reveal"
+              type="button"
+              aria-label="Open ${BOT_NAME}"
+              title="Open ${BOT_NAME}"
+              hidden
+            >
+              <i class="fas fa-robot" aria-hidden="true"></i>
+              <span class="sr-only">Open ${BOT_NAME}</span>
             </button>
 
             <section
@@ -302,16 +301,6 @@
 
                 <div class="chatbot-header-actions">
                   <button
-                    id="chatbot-reset"
-                    class="chatbot-icon-btn"
-                    type="button"
-                    aria-label="Reset ${BOT_NAME} position and size"
-                    title="Reset position and size"
-                  >
-                    <i class="fas fa-location-crosshairs" aria-hidden="true"></i>
-                  </button>
-
-                  <button
                     id="chatbot-clear"
                     class="chatbot-icon-btn"
                     type="button"
@@ -319,6 +308,16 @@
                     title="Clear history"
                   >
                     <i class="fas fa-trash-can" aria-hidden="true"></i>
+                  </button>
+
+                  <button
+                    id="chatbot-hide-launcher"
+                    class="chatbot-icon-btn"
+                    type="button"
+                    aria-label="Hide the Echo launcher"
+                    title="Hide Echo launcher"
+                  >
+                    <i class="fas fa-eye-slash" aria-hidden="true"></i>
                   </button>
 
                   <button
@@ -395,11 +394,12 @@
     const elements = {
       container: document.getElementById("chatbot-container"),
       toggle: document.getElementById("chatbot-toggle"),
+      reveal: document.getElementById("chatbot-reveal"),
       window: document.getElementById("chatbot-window"),
       header: document.getElementById("chatbot-header"),
       close: document.getElementById("chatbot-close"),
       clear: document.getElementById("chatbot-clear"),
-      reset: document.getElementById("chatbot-reset"),
+      hideLauncher: document.getElementById("chatbot-hide-launcher"),
       minimize: document.getElementById("chatbot-minimize"),
       maximize: document.getElementById("chatbot-maximize"),
       messages: document.getElementById("chatbot-messages"),
@@ -411,40 +411,45 @@
 
     if (Object.values(elements).some((element) => !element)) {
       console.error("Echo chatbot elements could not be initialized.");
+      window[INSTANCE_KEY] = null;
       return;
     }
 
+    const cleanupCallbacks = [];
     let historyKey = GUEST_HISTORY_KEY;
     let history = [];
     let isSending = false;
     let isOpen = false;
-    let suppressNextToggleClick = false;
-    let resizeSaveTimer = null;
-    let launcherAnimationTimer = null;
-    let windowAnimationTimer = null;
+    let launcherSuppressed = false;
     let statusTimer = null;
+    let closeTimer = null;
+    let resizeSaveTimer = null;
     let activeRequestController = null;
-    let dragFrame = null;
-    let pendingDragPosition = null;
-
-    const cleanupCallbacks = [];
+    let resizeObserver = null;
 
     function addManagedEvent(target, type, listener, options) {
       target.addEventListener(type, listener, options);
       cleanupCallbacks.push(() => target.removeEventListener(type, listener, options));
     }
 
+    function focusSafely(element) {
+      try {
+        element?.focus({ preventScroll: true });
+      } catch (_) {
+        element?.focus();
+      }
+    }
+
     function readHistory() {
-      const stored = safeReadJson(historyKey, []);
-      return Array.isArray(stored) ? trimHistory(stored) : [];
+      return trimHistory(safeReadJson(historyKey, []));
     }
 
     function saveHistory() {
-      history = safelyPersistHistory(historyKey, history);
+      history = persistHistory(historyKey, history);
     }
 
     function appendFormattedText(target, text) {
-      const parts = String(text || "").split(/(\*\*[^*]+\*\*)/g);
+      const parts = String(text || "").split(/(\*\*.*?\*\*)/g);
 
       parts.forEach((part) => {
         if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
@@ -460,26 +465,31 @@
     function createWelcome() {
       const welcome = document.createElement("div");
       welcome.className = "chatbot-welcome";
-      welcome.innerHTML = `
-        <span class="chatbot-welcome-icon">
-          <i class="fas fa-robot" aria-hidden="true"></i>
-        </span>
-        <div>
-          <strong>Hi, I’m ${BOT_NAME}.</strong>
-          <p>
-            Ask about CodeTracker, your classroom, or an activity.
-            Your recent chat is saved in this browser.
-          </p>
-        </div>
-      `;
+
+      const icon = document.createElement("span");
+      icon.className = "chatbot-welcome-icon";
+      icon.innerHTML = '<i class="fas fa-robot" aria-hidden="true"></i>';
+
+      const copy = document.createElement("div");
+      const heading = document.createElement("strong");
+      const description = document.createElement("p");
+
+      heading.textContent = `Hi, I’m ${BOT_NAME}.`;
+      description.textContent =
+        "Ask about CodeTracker, your classroom, or an activity. Your recent chat is saved in this browser.";
+
+      copy.append(heading, description);
+      welcome.append(icon, copy);
       elements.messages.appendChild(welcome);
     }
 
     function renderMessage(item, { animate = false, temporary = false } = {}) {
       const wrapper = document.createElement("article");
-      wrapper.className = `chat-message ${item.role === "user" ? "user-message" : "bot-message"}`;
+      wrapper.className = `chat-message ${
+        item.role === "user" ? "user-message" : "bot-message"
+      }`;
 
-      if (animate && !reducedMotionQuery.matches) {
+      if (animate) {
         wrapper.classList.add("chat-message-animation");
       }
 
@@ -500,11 +510,12 @@
       wrapper.append(bubble, meta);
       elements.messages.appendChild(wrapper);
       elements.messages.scrollTop = elements.messages.scrollHeight;
+
       return wrapper;
     }
 
     function renderHistory() {
-      elements.messages.innerHTML = "";
+      elements.messages.replaceChildren();
       history = readHistory();
 
       if (!history.length) {
@@ -516,29 +527,34 @@
     }
 
     function addPersistentMessage(text, role) {
-      const item = sanitizeHistoryItem({
-        role,
-        text: String(text || ""),
-        timestamp: Date.now()
-      });
+      const normalizedText = String(text || "")
+        .trim()
+        .slice(0, MESSAGE_CHARACTER_LIMIT);
 
-      if (!item) {
+      if (!normalizedText) {
         return null;
       }
 
       elements.messages.querySelector(".chatbot-welcome")?.remove();
+
+      const item = {
+        role,
+        text: normalizedText,
+        timestamp: Date.now()
+      };
+
       history.push(item);
       saveHistory();
       return renderMessage(item, { animate: true });
     }
 
-    function setStatus(message = "", duration = 0) {
+    function setStatus(message = "", timeout = 0) {
       window.clearTimeout(statusTimer);
       elements.status.textContent = message;
       elements.status.classList.toggle("is-visible", Boolean(message));
 
-      if (message && duration > 0) {
-        statusTimer = window.setTimeout(() => setStatus(""), duration);
+      if (message && timeout > 0) {
+        statusTimer = window.setTimeout(() => setStatus(""), timeout);
       }
     }
 
@@ -546,9 +562,7 @@
       isSending = sending;
       elements.input.disabled = sending;
       elements.send.disabled = sending;
-      elements.clear.disabled = sending;
       elements.send.classList.toggle("is-loading", sending);
-      elements.form.setAttribute("aria-busy", String(sending));
     }
 
     function autoGrowInput() {
@@ -556,155 +570,32 @@
       elements.input.style.height = `${Math.min(elements.input.scrollHeight, 120)}px`;
     }
 
-    function sanitizeLayout(value) {
-      if (!value || typeof value !== "object" || Array.isArray(value)) {
-        return {};
-      }
-
-      const layout = {};
-
-      if (isFiniteNumber(value.launcherX)) {
-        layout.launcherX = clamp(value.launcherX, -10000, 10000);
-      }
-
-      if (isFiniteNumber(value.launcherY)) {
-        layout.launcherY = clamp(value.launcherY, -10000, 10000);
-      }
-
-      if (isFiniteNumber(value.width)) {
-        layout.width = clamp(value.width, 240, 2400);
-      }
-
-      if (isFiniteNumber(value.height)) {
-        layout.height = clamp(value.height, 260, 2400);
-      }
-
-      layout.maximized = Boolean(value.maximized);
-      layout.minimized = Boolean(value.minimized);
-      return layout;
-    }
-
-    function migrateLegacyLayout() {
-      const current = safeReadJson(LAYOUT_KEY, null);
-
-      if (current && typeof current === "object") {
-        return;
-      }
-
-      const legacy = sanitizeLayout(safeReadJson(LEGACY_LAYOUT_KEY, {}));
-
-      if (Object.keys(legacy).length) {
-        safeWriteJson(LAYOUT_KEY, legacy);
-      }
-
-      safeRemove(LEGACY_LAYOUT_KEY);
-    }
-
     function getLayout() {
       return sanitizeLayout(safeReadJson(LAYOUT_KEY, {}));
     }
 
-    function saveLayout(patch, removeKeys = []) {
-      const next = {
-        ...getLayout(),
-        ...patch
-      };
-
-      removeKeys.forEach((key) => delete next[key]);
-      safeWriteJson(LAYOUT_KEY, sanitizeLayout(next));
+    function saveLayout(patch) {
+      safeWriteJson(LAYOUT_KEY, sanitizeLayout({ ...getLayout(), ...patch }));
     }
 
-    function clampLauncherPosition(x, y) {
-      const bounds = getViewportBounds();
-      const margin = getViewportMargin();
-      const rect = elements.toggle.getBoundingClientRect();
-      const width = Math.max(rect.width, elements.toggle.offsetWidth, 1);
-      const height = Math.max(rect.height, elements.toggle.offsetHeight, 1);
-      const maximumX = Math.max(bounds.left + margin, bounds.right - width - margin);
-      const maximumY = Math.max(bounds.top + margin, bounds.bottom - height - margin);
+    function migrateOldLayout() {
+      const current = getLayout();
 
-      return {
-        x: clamp(x, bounds.left + margin, maximumX),
-        y: clamp(y, bounds.top + margin, maximumY)
-      };
-    }
-
-    function positionLauncher(x, y, { persist = false } = {}) {
-      const position = clampLauncherPosition(x, y);
-
-      elements.container.style.left = `${position.x}px`;
-      elements.container.style.top = `${position.y}px`;
-      elements.container.style.right = "auto";
-      elements.container.style.bottom = "auto";
-
-      if (persist) {
-        saveLayout({ launcherX: position.x, launcherY: position.y });
-      }
-
-      return position;
-    }
-
-    function resetLauncherToDefault({ animate = true, persist = true } = {}) {
-      elements.container.style.left = "";
-      elements.container.style.top = "";
-      elements.container.style.right = "";
-      elements.container.style.bottom = "";
-
-      if (persist) {
-        saveLayout({}, ["launcherX", "launcherY"]);
-      }
-
-      if (animate && !reducedMotionQuery.matches) {
-        elements.toggle.classList.remove("is-settling", "chatbot-launcher-entering");
-        void elements.toggle.offsetWidth;
-        elements.toggle.classList.add("is-settling");
-      }
-
-      window.requestAnimationFrame(() => ensureLauncherVisible({ persist }));
-    }
-
-    function ensureLauncherVisible({ persist = true } = {}) {
-      const rect = elements.toggle.getBoundingClientRect();
-
-      if (!rect.width || !rect.height) {
+      if (Object.keys(current).length) {
+        LEGACY_LAYOUT_KEYS.forEach(safeRemove);
         return;
       }
 
-      const position = clampLauncherPosition(rect.left, rect.top);
-      const moved = Math.abs(position.x - rect.left) > 0.5 || Math.abs(position.y - rect.top) > 0.5;
+      for (const key of LEGACY_LAYOUT_KEYS) {
+        const old = sanitizeLayout(safeReadJson(key, {}));
 
-      if (moved || elements.container.style.left) {
-        positionLauncher(position.x, position.y, { persist });
-      }
-    }
-
-    function applySavedLayout() {
-      const layout = getLayout();
-
-      if (isFiniteNumber(layout.launcherX) && isFiniteNumber(layout.launcherY)) {
-        positionLauncher(layout.launcherX, layout.launcherY, { persist: true });
-      } else {
-        resetLauncherToDefault({ animate: false, persist: false });
-      }
-
-      if (!isCompactViewport()) {
-        if (isFiniteNumber(layout.width)) {
-          elements.window.style.width = `${layout.width}px`;
-        }
-
-        if (isFiniteNumber(layout.height)) {
-          elements.window.style.height = `${layout.height}px`;
+        if (Object.keys(old).length) {
+          safeWriteJson(LAYOUT_KEY, old);
+          break;
         }
       }
 
-      elements.window.classList.toggle("chatbot-maximized", Boolean(layout.maximized));
-      elements.window.classList.toggle("chatbot-minimized", Boolean(layout.minimized));
-      updateWindowControls();
-
-      window.requestAnimationFrame(() => {
-        ensureLauncherVisible({ persist: true });
-        clampWindowToViewport();
-      });
+      LEGACY_LAYOUT_KEYS.forEach(safeRemove);
     }
 
     function clampWindowToViewport() {
@@ -718,109 +609,15 @@
         return;
       }
 
-      const bounds = getViewportBounds();
-      const margin = getViewportMargin();
-      const availableWidth = Math.max(240, bounds.width - margin * 2);
-      const availableHeight = Math.max(260, bounds.height - margin * 2);
-      const width = Math.min(elements.window.offsetWidth || 390, availableWidth);
-      const height = Math.min(elements.window.offsetHeight || 560, availableHeight);
+      const viewportWidth = window.visualViewport?.width || window.innerWidth;
+      const viewportHeight = window.visualViewport?.height || window.innerHeight;
+      const availableWidth = Math.max(310, viewportWidth - 36);
+      const availableHeight = Math.max(360, viewportHeight - 36);
+      const width = clamp(elements.window.offsetWidth || 390, 310, availableWidth);
+      const height = clamp(elements.window.offsetHeight || 560, 360, availableHeight);
 
       elements.window.style.width = `${width}px`;
       elements.window.style.height = `${height}px`;
-    }
-
-    function clearAnimationTimer(name) {
-      if (name === "launcher") {
-        window.clearTimeout(launcherAnimationTimer);
-        launcherAnimationTimer = null;
-      } else {
-        window.clearTimeout(windowAnimationTimer);
-        windowAnimationTimer = null;
-      }
-    }
-
-    function animateLauncherOut() {
-      clearAnimationTimer("launcher");
-      elements.toggle.classList.remove("chatbot-launcher-entering", "is-settling");
-
-      if (reducedMotionQuery.matches) {
-        elements.toggle.classList.add("chatbot-toggle-hidden");
-        return;
-      }
-
-      elements.toggle.classList.add("chatbot-launcher-exiting");
-      launcherAnimationTimer = window.setTimeout(() => {
-        elements.toggle.classList.remove("chatbot-launcher-exiting");
-        elements.toggle.classList.add("chatbot-toggle-hidden");
-      }, 190);
-    }
-
-    function animateLauncherIn() {
-      clearAnimationTimer("launcher");
-      elements.toggle.classList.remove("chatbot-launcher-exiting", "chatbot-toggle-hidden");
-
-      if (reducedMotionQuery.matches) {
-        return;
-      }
-
-      elements.toggle.classList.remove("chatbot-launcher-entering");
-      void elements.toggle.offsetWidth;
-      elements.toggle.classList.add("chatbot-launcher-entering");
-
-      launcherAnimationTimer = window.setTimeout(() => {
-        elements.toggle.classList.remove("chatbot-launcher-entering");
-      }, 380);
-    }
-
-    function focusSafely(element) {
-      try {
-        element?.focus({ preventScroll: true });
-      } catch (_) {
-        element?.focus();
-      }
-    }
-
-    function openChatbot() {
-      if (isOpen) {
-        return;
-      }
-
-      isOpen = true;
-      clearAnimationTimer("window");
-      elements.window.classList.remove("chatbot-closing");
-      elements.window.classList.add("chatbot-open");
-      elements.window.setAttribute("aria-hidden", "false");
-      elements.toggle.setAttribute("aria-expanded", "true");
-      animateLauncherOut();
-      clampWindowToViewport();
-
-      windowAnimationTimer = window.setTimeout(() => {
-        if (elements.window.classList.contains("chatbot-minimized")) {
-          focusSafely(elements.minimize);
-        } else {
-          focusSafely(elements.input);
-        }
-      }, reducedMotionQuery.matches ? 0 : 220);
-    }
-
-    function closeChatbot() {
-      if (!isOpen) {
-        return;
-      }
-
-      isOpen = false;
-      clearAnimationTimer("window");
-      elements.window.classList.add("chatbot-closing");
-      elements.window.classList.remove("chatbot-open");
-      elements.window.setAttribute("aria-hidden", "true");
-      elements.toggle.setAttribute("aria-expanded", "false");
-      animateLauncherIn();
-      ensureLauncherVisible({ persist: true });
-
-      windowAnimationTimer = window.setTimeout(() => {
-        elements.window.classList.remove("chatbot-closing");
-        focusSafely(elements.toggle);
-      }, reducedMotionQuery.matches ? 0 : 240);
     }
 
     function updateWindowControls() {
@@ -836,18 +633,144 @@
       elements.minimize.title = isMinimized ? "Restore" : "Minimize";
 
       if (minimizeIcon) {
-        minimizeIcon.className = isMinimized ? "fas fa-window-restore" : "fas fa-minus";
+        minimizeIcon.className = isMinimized
+          ? "fas fa-window-restore"
+          : "fas fa-minus";
       }
 
       elements.maximize.setAttribute(
         "aria-label",
-        isMaximized ? `Restore ${BOT_NAME} window size` : `Maximize ${BOT_NAME}`
+        isMaximized
+          ? `Restore ${BOT_NAME} window size`
+          : `Maximize ${BOT_NAME}`
       );
       elements.maximize.title = isMaximized ? "Restore size" : "Maximize";
 
       if (maximizeIcon) {
-        maximizeIcon.className = isMaximized ? "fas fa-compress" : "fas fa-expand";
+        maximizeIcon.className = isMaximized
+          ? "fas fa-compress"
+          : "fas fa-expand";
       }
+    }
+
+    function applySavedLayout() {
+      migrateOldLayout();
+      const layout = getLayout();
+
+      if (!isCompactViewport()) {
+        if (isFiniteNumber(layout.width)) {
+          elements.window.style.width = `${layout.width}px`;
+        }
+
+        if (isFiniteNumber(layout.height)) {
+          elements.window.style.height = `${layout.height}px`;
+        }
+      }
+
+      elements.window.classList.toggle("chatbot-maximized", Boolean(layout.maximized));
+      elements.window.classList.toggle("chatbot-minimized", Boolean(layout.minimized));
+      updateWindowControls();
+
+      window.requestAnimationFrame(clampWindowToViewport);
+    }
+
+    function animateLauncherOut() {
+      elements.toggle.classList.remove("chatbot-launcher-entering");
+      elements.toggle.classList.add("chatbot-launcher-exiting");
+
+      window.setTimeout(() => {
+        elements.toggle.classList.remove("chatbot-launcher-exiting");
+        elements.toggle.classList.add("chatbot-toggle-hidden");
+      }, 180);
+    }
+
+    function animateLauncherIn() {
+      elements.toggle.hidden = false;
+      elements.toggle.classList.remove(
+        "chatbot-toggle-hidden",
+        "chatbot-launcher-exiting"
+      );
+      void elements.toggle.offsetWidth;
+      elements.toggle.classList.add("chatbot-launcher-entering");
+
+      window.setTimeout(() => {
+        elements.toggle.classList.remove("chatbot-launcher-entering");
+      }, 280);
+    }
+
+    function openChatbot() {
+      window.clearTimeout(closeTimer);
+      launcherSuppressed = false;
+      elements.reveal.hidden = true;
+      elements.toggle.hidden = false;
+      isOpen = true;
+
+      elements.window.classList.remove("chatbot-closing");
+      elements.window.classList.add("chatbot-open");
+      elements.window.setAttribute("aria-hidden", "false");
+      elements.toggle.setAttribute("aria-expanded", "true");
+      animateLauncherOut();
+      clampWindowToViewport();
+
+      window.setTimeout(() => {
+        if (elements.window.classList.contains("chatbot-minimized")) {
+          focusSafely(elements.minimize);
+        } else {
+          focusSafely(elements.input);
+        }
+      }, 180);
+    }
+
+    function closeChatbot({ restoreFocus = true } = {}) {
+      if (!isOpen) {
+        return;
+      }
+
+      isOpen = false;
+      elements.window.classList.add("chatbot-closing");
+      elements.window.classList.remove("chatbot-open");
+      elements.window.setAttribute("aria-hidden", "true");
+      elements.toggle.setAttribute("aria-expanded", "false");
+
+      window.clearTimeout(closeTimer);
+      closeTimer = window.setTimeout(() => {
+        elements.window.classList.remove("chatbot-closing");
+      }, 240);
+
+      if (launcherSuppressed) {
+        elements.toggle.hidden = true;
+        elements.toggle.classList.add("chatbot-toggle-hidden");
+        elements.reveal.hidden = false;
+
+        if (restoreFocus) {
+          focusSafely(elements.reveal);
+        }
+      } else {
+        animateLauncherIn();
+
+        if (restoreFocus) {
+          window.setTimeout(() => focusSafely(elements.toggle), 220);
+        }
+      }
+    }
+
+    function hideLauncher() {
+      launcherSuppressed = true;
+      closeChatbot({ restoreFocus: false });
+
+      window.setTimeout(() => {
+        elements.toggle.hidden = true;
+        elements.reveal.hidden = false;
+        focusSafely(elements.reveal);
+      }, 210);
+    }
+
+    function revealAndOpen() {
+      launcherSuppressed = false;
+      elements.reveal.hidden = true;
+      elements.toggle.hidden = false;
+      elements.toggle.classList.add("chatbot-toggle-hidden");
+      openChatbot();
     }
 
     function toggleMinimize() {
@@ -863,6 +786,7 @@
       updateWindowControls();
 
       if (!willMinimize) {
+        clampWindowToViewport();
         focusSafely(elements.input);
       }
     }
@@ -874,23 +798,23 @@
       elements.window.classList.remove("chatbot-minimized");
       saveLayout({ maximized: willMaximize, minimized: false });
       updateWindowControls();
+
+      if (!willMaximize) {
+        clampWindowToViewport();
+      }
+
       focusSafely(elements.input);
     }
 
     async function confirmAction(message, options) {
       if (window.AppDialog?.confirm) {
-        return Boolean(await window.AppDialog.confirm(message, options));
+        return window.AppDialog.confirm(message, options);
       }
 
       return window.confirm(message);
     }
 
     async function clearHistory() {
-      if (isSending) {
-        setStatus("Please wait for the current reply before clearing history.", 2200);
-        return;
-      }
-
       const confirmed = await confirmAction(
         "Clear Echo’s saved chat history on this browser?",
         {
@@ -911,51 +835,46 @@
       setStatus("Chat history cleared.", 1800);
     }
 
-    async function resetLayout() {
-      const confirmed = await confirmAction(
-        "Reset Echo’s button position and window size? Chat history will not be deleted.",
-        {
-          title: "Reset Echo layout",
-          confirmText: "Reset layout",
-          cancelText: "Cancel"
-        }
-      );
-
-      if (!confirmed) {
-        return;
-      }
-
-      safeRemove(LAYOUT_KEY);
-      safeRemove(LEGACY_LAYOUT_KEY);
-      elements.window.classList.remove("chatbot-maximized", "chatbot-minimized");
-      elements.window.style.removeProperty("width");
-      elements.window.style.removeProperty("height");
-      resetLauncherToDefault({ animate: true, persist: false });
-      updateWindowControls();
-      clampWindowToViewport();
-      setStatus("Echo’s position and size were reset.", 2200);
-    }
-
     function createRequestController() {
       activeRequestController?.abort();
       const controller = new AbortController();
-      const timeoutId = window.setTimeout(() => controller.abort("timeout"), REQUEST_TIMEOUT_MS);
+      const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+      activeRequestController = controller;
 
       return {
         controller,
-        clearTimeout: () => window.clearTimeout(timeoutId)
+        clearTimeout() {
+          window.clearTimeout(timeoutId);
+        }
       };
+    }
+
+    function messageForFailedResponse(response, data) {
+      const serverMessage = data?.reply || data?.message || data?.error;
+
+      if (serverMessage) {
+        return String(serverMessage);
+      }
+
+      if (response.status === 401 || response.status === 403) {
+        return "Your session may have expired. Please sign in again and retry.";
+      }
+
+      if (response.status === 429) {
+        return "Echo is receiving too many requests right now. Please wait a moment and try again.";
+      }
+
+      if (response.status >= 500) {
+        return "The assistant service is temporarily unavailable. Please try again shortly.";
+      }
+
+      return "Sorry, I could not access that information.";
     }
 
     async function sendMessage() {
       const message = elements.input.value.trim();
 
       if (!message || isSending) {
-        return;
-      }
-
-      if (navigator.onLine === false) {
-        setStatus("You appear to be offline.", 2200);
         return;
       }
 
@@ -976,7 +895,6 @@
       thinking.classList.add("chatbot-thinking");
 
       const request = createRequestController();
-      activeRequestController = request.controller;
 
       try {
         const response = await fetch(`${readApiBaseUrl()}/chatbot`, {
@@ -996,19 +914,11 @@
         const data = await readResponseBody(response);
         thinking.remove();
 
-        let reply;
+        const reply = response.ok
+          ? data.reply || data.message || "Sorry, I could not generate a response."
+          : messageForFailedResponse(response, data);
 
-        if (response.ok) {
-          reply = data.reply || data.message || "Sorry, I could not generate a response.";
-        } else if (response.status === 401 || response.status === 403) {
-          reply = "Your session may have expired. Please sign in again and retry.";
-        } else if (response.status === 429) {
-          reply = "Echo is receiving too many requests right now. Please wait a moment and try again.";
-        } else {
-          reply = data.reply || data.message || data.error || "Sorry, I could not access that information.";
-        }
-
-        addPersistentMessage(String(reply).slice(0, MESSAGE_CHARACTER_LIMIT), "assistant");
+        addPersistentMessage(reply, "assistant");
       } catch (error) {
         thinking.remove();
 
@@ -1036,164 +946,6 @@
           focusSafely(elements.input);
         }
       }
-    }
-
-    function settleLauncher() {
-      elements.toggle.style.removeProperty("--echo-drag-tilt");
-      elements.toggle.classList.remove("is-dragging");
-      elements.toggle.setAttribute("aria-grabbed", "false");
-
-      if (!reducedMotionQuery.matches) {
-        elements.toggle.classList.remove("is-settling");
-        void elements.toggle.offsetWidth;
-        elements.toggle.classList.add("is-settling");
-        window.setTimeout(() => elements.toggle.classList.remove("is-settling"), 420);
-      }
-    }
-
-    function setupLauncherDrag() {
-      let drag = null;
-
-      function applyPendingDrag() {
-        dragFrame = null;
-
-        if (!drag || !pendingDragPosition) {
-          return;
-        }
-
-        const position = positionLauncher(
-          pendingDragPosition.x,
-          pendingDragPosition.y,
-          { persist: false }
-        );
-
-        const tilt = clamp(pendingDragPosition.dx * 0.18, -9, 9);
-        elements.toggle.style.setProperty("--echo-drag-tilt", `${tilt}deg`);
-        drag.lastPosition = position;
-        pendingDragPosition = null;
-      }
-
-      function finishDrag(event) {
-        if (!drag || drag.pointerId !== event.pointerId) {
-          return;
-        }
-
-        const finishedDrag = drag;
-
-        if (dragFrame) {
-          window.cancelAnimationFrame(dragFrame);
-          dragFrame = null;
-        }
-
-        if (pendingDragPosition) {
-          applyPendingDrag();
-        }
-
-        // Clear the active drag before releasing capture. Some browsers fire
-        // lostpointercapture synchronously, which would otherwise finish twice.
-        drag = null;
-        pendingDragPosition = null;
-
-        try {
-          elements.toggle.releasePointerCapture(event.pointerId);
-        } catch (_) {
-          // Pointer capture may already have been released by the browser.
-        }
-
-        if (finishedDrag.moved) {
-          const rect = elements.toggle.getBoundingClientRect();
-          const position = positionLauncher(rect.left, rect.top, { persist: true });
-          saveLayout({ launcherX: position.x, launcherY: position.y });
-          suppressNextToggleClick = true;
-          window.setTimeout(() => {
-            suppressNextToggleClick = false;
-          }, 0);
-        }
-
-        settleLauncher();
-      }
-
-      addManagedEvent(elements.toggle, "pointerdown", (event) => {
-        if (event.button !== 0 || isOpen) {
-          return;
-        }
-
-        const rect = elements.toggle.getBoundingClientRect();
-
-        drag = {
-          pointerId: event.pointerId,
-          startX: event.clientX,
-          startY: event.clientY,
-          originX: rect.left,
-          originY: rect.top,
-          lastClientX: event.clientX,
-          lastPosition: { x: rect.left, y: rect.top },
-          moved: false
-        };
-
-        try {
-          elements.toggle.setPointerCapture(event.pointerId);
-        } catch (_) {
-          // Some browsers may not support pointer capture in every state.
-        }
-
-        elements.toggle.classList.remove("is-settling");
-        elements.toggle.classList.add("is-dragging");
-        elements.toggle.setAttribute("aria-grabbed", "true");
-      });
-
-      addManagedEvent(elements.toggle, "pointermove", (event) => {
-        if (!drag || drag.pointerId !== event.pointerId) {
-          return;
-        }
-
-        const dx = event.clientX - drag.startX;
-        const dy = event.clientY - drag.startY;
-
-        if (Math.hypot(dx, dy) > DRAG_THRESHOLD) {
-          drag.moved = true;
-        }
-
-        if (!drag.moved) {
-          return;
-        }
-
-        event.preventDefault();
-
-        pendingDragPosition = {
-          x: drag.originX + dx,
-          y: drag.originY + dy,
-          dx: event.clientX - drag.lastClientX
-        };
-        drag.lastClientX = event.clientX;
-
-        if (!dragFrame) {
-          dragFrame = window.requestAnimationFrame(applyPendingDrag);
-        }
-      });
-
-      addManagedEvent(elements.toggle, "pointerup", finishDrag);
-      addManagedEvent(elements.toggle, "pointercancel", finishDrag);
-      addManagedEvent(elements.toggle, "lostpointercapture", (event) => {
-        if (drag && drag.pointerId === event.pointerId) {
-          finishDrag(event);
-        }
-      });
-
-      addManagedEvent(elements.toggle, "keydown", (event) => {
-        if (!event.altKey || !["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
-          return;
-        }
-
-        event.preventDefault();
-        const rect = elements.toggle.getBoundingClientRect();
-        const step = event.shiftKey ? 32 : 12;
-        const dx = event.key === "ArrowLeft" ? -step : event.key === "ArrowRight" ? step : 0;
-        const dy = event.key === "ArrowUp" ? -step : event.key === "ArrowDown" ? step : 0;
-        positionLauncher(rect.left + dx, rect.top + dy, { persist: true });
-        settleLauncher();
-        setStatus("Echo button moved.", 900);
-      });
     }
 
     async function resolveHistoryScope() {
@@ -1243,23 +995,26 @@
     }
 
     function handleViewportChange() {
-      window.requestAnimationFrame(() => {
-        ensureLauncherVisible({ persist: true });
-        clampWindowToViewport();
-      });
+      window.requestAnimationFrame(clampWindowToViewport);
     }
 
-    addManagedEvent(elements.toggle, "click", () => {
-      if (suppressNextToggleClick) {
+    function ensureAvailable() {
+      if (!document.body.contains(elements.container)) {
         return;
       }
 
-      openChatbot();
-    });
+      if (!isOpen && !launcherSuppressed) {
+        elements.reveal.hidden = true;
+        elements.toggle.hidden = false;
+        elements.toggle.classList.remove("chatbot-toggle-hidden");
+      }
+    }
 
-    addManagedEvent(elements.close, "click", closeChatbot);
+    addManagedEvent(elements.toggle, "click", openChatbot);
+    addManagedEvent(elements.reveal, "click", revealAndOpen);
+    addManagedEvent(elements.close, "click", () => closeChatbot());
     addManagedEvent(elements.clear, "click", () => void clearHistory());
-    addManagedEvent(elements.reset, "click", () => void resetLayout());
+    addManagedEvent(elements.hideLauncher, "click", hideLauncher);
     addManagedEvent(elements.minimize, "click", toggleMinimize);
     addManagedEvent(elements.maximize, "click", toggleMaximize);
 
@@ -1285,8 +1040,8 @@
 
       if (event.altKey && event.shiftKey && event.key.toLowerCase() === "e") {
         event.preventDefault();
-        resetLauncherToDefault({ animate: true, persist: true });
-        ensureLauncherVisible({ persist: true });
+        launcherSuppressed = false;
+        elements.reveal.hidden = true;
         openChatbot();
       }
     });
@@ -1297,25 +1052,36 @@
     addManagedEvent(window, "offline", () => setStatus("You’re offline."));
 
     if (window.visualViewport) {
-      addManagedEvent(window.visualViewport, "resize", handleViewportChange, { passive: true });
-      addManagedEvent(window.visualViewport, "scroll", handleViewportChange, { passive: true });
+      addManagedEvent(window.visualViewport, "resize", handleViewportChange, {
+        passive: true
+      });
+      addManagedEvent(window.visualViewport, "scroll", handleViewportChange, {
+        passive: true
+      });
     }
 
-    addManagedEvent(window, "pagehide", () => {
-      activeRequestController?.abort();
-      cleanupCallbacks.splice(0).forEach((cleanup) => cleanup());
-      window[INSTANCE_KEY] = null;
-    }, { once: true });
+    addManagedEvent(
+      window,
+      "pagehide",
+      () => {
+        activeRequestController?.abort();
+        window.clearTimeout(statusTimer);
+        window.clearTimeout(closeTimer);
+        window.clearTimeout(resizeSaveTimer);
+        resizeObserver?.disconnect();
+        cleanupCallbacks.splice(0).forEach((cleanup) => cleanup());
+        window[INSTANCE_KEY] = null;
+      },
+      { once: true }
+    );
 
-    setupLauncherDrag();
-    migrateLegacyLayout();
     applySavedLayout();
     renderHistory();
     autoGrowInput();
     void resolveHistoryScope();
 
     if (window.ResizeObserver) {
-      const resizeObserver = new ResizeObserver(() => {
+      resizeObserver = new ResizeObserver(() => {
         if (
           !isOpen ||
           isCompactViewport() ||
@@ -1327,6 +1093,7 @@
 
         window.clearTimeout(resizeSaveTimer);
         resizeSaveTimer = window.setTimeout(() => {
+          clampWindowToViewport();
           saveLayout({
             width: elements.window.offsetWidth,
             height: elements.window.offsetHeight
@@ -1335,17 +1102,13 @@
       });
 
       resizeObserver.observe(elements.window);
-      cleanupCallbacks.push(() => resizeObserver.disconnect());
     }
 
-    const publicApi = Object.freeze({
+    publicApi = Object.freeze({
       open: openChatbot,
       close: closeChatbot,
-      resetLayout,
-      ensureVisible: () => {
-        ensureLauncherVisible({ persist: true });
-        clampWindowToViewport();
-      }
+      hideLauncher,
+      ensureAvailable
     });
 
     window[INSTANCE_KEY] = publicApi;
