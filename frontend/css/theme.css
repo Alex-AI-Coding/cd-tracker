@@ -294,8 +294,8 @@ select option {
 }
 
 :where(.btn-secondary, .btn.cancel, .tab-button, .tab-btn, .tracked-filter-btn, .dropdown-btn):hover {
-  background-color: var(--color-border) !important;
-  color: var(--color-heading) !important;
+  background-color: rgba(59, 130, 246, 0.14) !important;
+  color: var(--color-text) !important;
 }
 
 /* Floating theme control. theme.js creates it when a page has none. */
@@ -620,10 +620,9 @@ html[data-theme="light"] .tab-btn.active {
   color: #ffffff !important;
 }
 
-html[data-theme="light"] .tab-button:hover,
-html[data-theme="light"] .tab-btn:hover {
+html[data-theme="light"] .tab-button.active:hover,
+html[data-theme="light"] .tab-btn.active:hover {
   color: #ffffff !important;
-  background: linear-gradient(180deg, #2d4158 0%, #24384d 100%) !important;
 }
 
 html[data-theme="light"] :where(
