@@ -37,6 +37,30 @@
     return isNaN(d) ? '' : new Intl.DateTimeFormat('en-US', { month: 'short', day: '2-digit', year: 'numeric' }).format(d);
   }
 
+  function formatDateTime(value) {
+    if (!value) return '';
+    const d = new Date(value);
+    return isNaN(d) ? '' : d.toLocaleString();
+  }
+
+  function formatScoreValue(value) {
+    if (value === null || value === undefined || String(value).trim() === '') return 'X';
+    const number = Number(value);
+    return Number.isFinite(number) ? String(Number(number.toFixed(2))) : String(value);
+  }
+
+  function renderPrimaryMetaField(icon, label, value, isLink = false, valueClass = '') {
+    const text = String(value ?? '').trim() || 'X';
+    const valueHtml = isLink && text !== 'X'
+      ? `<a href="${escapeHtml(text)}" target="_blank" rel="noopener noreferrer">${escapeHtml(text)}</a>`
+      : escapeHtml(text);
+    return `
+      <div class="assignment-meta-field">
+        <div class="assignment-meta-field-label"><i class="${icon}"></i> ${escapeHtml(label)}</div>
+        <div class="assignment-meta-field-value ${valueClass}">${valueHtml}</div>
+      </div>`;
+  }
+
   function getDaysLeft(value) {
     if (!value) return null;
     const d = new Date(value);
@@ -119,7 +143,8 @@
     const dueDate     = formatDate(activity?.dueDate);
     const daysStr     = daysLeft != null ? (daysLeft > 0 ? `${daysLeft}d left` : 'Overdue') : (dueDate || 'No due date');
     const urgentClass = daysLeft != null && daysLeft <= 7 ? 'urgent' : 'normal';
-    const points      = activity?.maxScore != null ? `<span class="points"><i class="fas fa-star"></i> ${escapeHtml(activity.maxScore)} pts</span>` : '';
+    const points      = formatScoreValue(activity?.maxScore);
+    const score       = formatScoreValue(activity?.score);
 
     const repoBadge = needsRepo
       ? '<span class="assignment-repo-badge"><i class="fas fa-code-branch"></i> Needs repository</span>'
@@ -148,8 +173,12 @@
       : `<div class="assignment-status ${badgeClass}"><i class="${statusIcon}"></i> ${statusLabel}</div>`;
 
     const leftMetaItems = `
-      <span class="assignment-due"><i class="fas fa-calendar-alt"></i><span class="days-left ${urgentClass}">${daysStr}</span></span>
-      ${points}
+      ${renderPrimaryMetaField('fas fa-calendar-alt', 'Assignment due', daysStr, false, `days-left ${urgentClass}`)}
+      ${renderPrimaryMetaField('fas fa-calendar-day', 'Due date', dueDate)}
+      ${renderPrimaryMetaField('fas fa-star', 'Points', points === 'X' ? 'X' : `${points} pts`, false, 'points')}
+      ${renderPrimaryMetaField('fas fa-chart-line', 'Score', score === 'X' ? 'X' : `${score} pts`)}
+      ${renderPrimaryMetaField('fas fa-clock', 'Submitted at', formatDateTime(activity?.submittedAt))}
+      ${renderPrimaryMetaField('fab fa-github', 'Repository URL', activity?.repositoryUrl, true)}
     `;
 
     const rightMetaItems = `
