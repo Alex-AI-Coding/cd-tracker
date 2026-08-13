@@ -1217,7 +1217,6 @@ async function loadClasses() {
     classLoadState.created = true;
     classLoadState.joined = false;
     classDataLoaded.created = false;
-    updateTabCounts();
     renderClasses();
 
     await apiRequest('/classrooms/me', { method: 'GET' })
@@ -1234,7 +1233,6 @@ async function loadClasses() {
         .finally(() => {
             classLoadState.created = false;
             classDataLoaded.created = true;
-            updateTabCounts();
             renderClasses();
         });
 }
@@ -1243,7 +1241,6 @@ async function loadJoinedClasses() {
     if (classLoadState.joined || classDataLoaded.joined) return;
 
     classLoadState.joined = true;
-    updateTabCounts();
     renderClasses();
 
     await apiRequest('/classrooms/join', { method: 'GET' }, { redirectOnUnauthorized: false })
@@ -1295,7 +1292,6 @@ async function loadJoinedClasses() {
         .finally(() => {
             classLoadState.joined = false;
             classDataLoaded.joined = true;
-            updateTabCounts();
             renderClasses();
         });
 }
@@ -1308,15 +1304,6 @@ function switchTab(tab) {
     });
     if (tab === 'joined') loadJoinedClasses();
     renderClasses();
-}
-
-function updateTabCounts() {
-    const createdTab = document.querySelector('[data-tab="created"]');
-    const joinedTab  = document.querySelector('[data-tab="joined"]');
-    const createdCount = classLoadState.created ? '…' : classroomsData.created.length;
-    const joinedCount = classLoadState.joined ? '…' : classroomsData.joined.length;
-    if (createdTab) createdTab.innerHTML = `My Classes <span class="tab-count">${createdCount}</span>`;
-    if (joinedTab)  joinedTab.innerHTML  = `Joined Classes <span class="tab-count">${joinedCount}</span>`;
 }
 
 function renderClasses() {
