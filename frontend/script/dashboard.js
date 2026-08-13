@@ -54,6 +54,7 @@ let joinPasscodeClassCode = '';
 let currentTab = 'created';
 let classroomsData = { created: [], joined: [] };
 let classLoadState = { created: false, joined: false };
+let classDataLoaded = { created: false, joined: false };
 let classroomSearchTerm = '';
 
 // Manage modal state
@@ -1214,11 +1215,12 @@ async function loadClasses() {
     if (!container) return;
 
     classLoadState.created = true;
-    classLoadState.joined = true;
+    classLoadState.joined = false;
+    classDataLoaded.created = false;
     updateTabCounts();
     renderClasses();
 
-    const createdRequest = apiRequest('/classrooms/me', { method: 'GET' })
+    await apiRequest('/classrooms/me', { method: 'GET' })
         .then((createdResult) => {
             const createdRaw = Array.isArray(createdResult) ? createdResult : createdResult?.data || [];
             classroomsData.created = Array.isArray(createdRaw)
@@ -1231,11 +1233,20 @@ async function loadClasses() {
         })
         .finally(() => {
             classLoadState.created = false;
+            classDataLoaded.created = true;
             updateTabCounts();
             renderClasses();
         });
+}
 
-    const joinedRequest = apiRequest('/classrooms/join', { method: 'GET' }, { redirectOnUnauthorized: false })
+async function loadJoinedClasses() {
+    if (classLoadState.joined || classDataLoaded.joined) return;
+
+    classLoadState.joined = true;
+    updateTabCounts();
+    renderClasses();
+
+    await apiRequest('/classrooms/join', { method: 'GET' }, { redirectOnUnauthorized: false })
         .then((joinedData) => {
             const joinedRaw = Array.isArray(joinedData) ? joinedData : joinedData?.data || [];
             classroomsData.joined = Array.isArray(joinedRaw)
@@ -1283,11 +1294,10 @@ async function loadClasses() {
         })
         .finally(() => {
             classLoadState.joined = false;
+            classDataLoaded.joined = true;
             updateTabCounts();
             renderClasses();
         });
-
-    await Promise.allSettled([createdRequest, joinedRequest]);
 }
 
 function switchTab(tab) {
@@ -1296,6 +1306,7 @@ function switchTab(tab) {
     document.querySelectorAll('.tab-button').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.tab === tab);
     });
+    if (tab === 'joined') loadJoinedClasses();
     renderClasses();
 }
 
