@@ -615,6 +615,11 @@ html[data-theme="light"] :where(
   color: var(--color-text) !important;
 }
 
+html[data-theme="light"] .tab-button.active,
+html[data-theme="light"] .tab-btn.active {
+  color: #ffffff !important;
+}
+
 html[data-theme="light"] :where(
   .modal-content,
   .profile-dropdown,
