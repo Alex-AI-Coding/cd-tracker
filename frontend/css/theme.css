@@ -620,6 +620,12 @@ html[data-theme="light"] .tab-btn.active {
   color: #ffffff !important;
 }
 
+html[data-theme="light"] .tab-button:hover,
+html[data-theme="light"] .tab-btn:hover {
+  color: #ffffff !important;
+  background: linear-gradient(180deg, #2d4158 0%, #24384d 100%) !important;
+}
+
 html[data-theme="light"] :where(
   .modal-content,
   .profile-dropdown,
