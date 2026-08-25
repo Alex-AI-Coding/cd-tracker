@@ -17,7 +17,7 @@ function readApiBaseUrl() {
     fromStorage = null;
   }
 
-  return normalizeBaseUrl(fromClient || fromWindow || fromMeta || fromStorage || DEFAULT_API_BASE_URL);
+  return normalizeBaseUrl(fromClient || fromWindow || fromMeta || DEFAULT_API_BASE_URL);
 }
 
 const BACKEND_URL = `${readApiBaseUrl()}/oauth`;
