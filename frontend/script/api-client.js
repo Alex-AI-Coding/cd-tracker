@@ -18,7 +18,7 @@
     const fromWindow = globalScope.__CODETRACKER_API_BASE_URL || globalScope.__API_BASE_URL;
     const fromMeta = document.querySelector('meta[name="api-base-url"]')?.getAttribute("content");
     const fromStorage = safeReadStorage("api_base_url");
-    const chosen = fromWindow || fromMeta || fromStorage || DEFAULT_API_BASE_URL;
+    const chosen = fromWindow || fromMeta || DEFAULT_API_BASE_URL;
     return normalizeBaseUrl(chosen);
   }
 
