@@ -10,13 +10,6 @@ function readApiBaseUrl() {
   const fromWindow = window.__CODETRACKER_API_BASE_URL || window.__API_BASE_URL;
   const fromMeta = document.querySelector('meta[name="api-base-url"]')?.getAttribute("content");
 
-  let fromStorage = null;
-  try {
-    fromStorage = localStorage.getItem("api_base_url");
-  } catch (_) {
-    fromStorage = null;
-  }
-
   return normalizeBaseUrl(fromClient || fromWindow || fromMeta || DEFAULT_API_BASE_URL);
 }
 

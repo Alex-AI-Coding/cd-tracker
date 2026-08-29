@@ -2,14 +2,6 @@
 (function attachApiClient(globalScope) {
   const DEFAULT_API_BASE_URL = "https://codetracker-production-979d.up.railway.app/api";
 
-  function safeReadStorage(key) {
-    try {
-      return localStorage.getItem(key);
-    } catch (_) {
-      return null;
-    }
-  }
-
   function normalizeBaseUrl(value) {
     return String(value || "").trim().replace(/\/+$/, "");
   }
@@ -17,7 +9,6 @@
   function resolveApiBaseUrl() {
     const fromWindow = globalScope.__CODETRACKER_API_BASE_URL || globalScope.__API_BASE_URL;
     const fromMeta = document.querySelector('meta[name="api-base-url"]')?.getAttribute("content");
-    const fromStorage = safeReadStorage("api_base_url");
     const chosen = fromWindow || fromMeta || DEFAULT_API_BASE_URL;
     return normalizeBaseUrl(chosen);
   }
@@ -161,9 +152,12 @@
     if (response.status === 401 && !retried && retryOnRefresh && !isAuthEndpoint(path)) {
       retried = true;
 
-      // Prevent refresh storm when backend keeps returning 401 after a recent successful refresh.
+      // Another in-flight request may receive its old 401 just after a
+      // shared refresh completes. Retry it with the new cookie without
+      // launching a second refresh storm.
       if (Date.now() - lastRefreshSucceededAt < REFRESH_COOLDOWN_MS) {
-        console.warn(`Skipping refresh for ${path}; refreshed too recently.`);
+        console.log(`Retrying ${path}; the session was refreshed recently.`);
+        ({ response, body } = await makeRequest());
       } else {
         console.log(`Received 401 on ${path}, attempting token refresh`);
         const refreshed = await refreshToken();

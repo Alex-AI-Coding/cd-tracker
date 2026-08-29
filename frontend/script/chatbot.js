@@ -1,7 +1,7 @@
 (function initializeEchoChatbot() {
   "use strict";
 
-  const INSTANCE_KEY = "__CODETRACKER_ECHO_INSTANCE_V4__";
+  const INSTANCE_KEY = "__CODETRACKER_ECHO_INSTANCE_V5__";
 
   if (window[INSTANCE_KEY]) {
     window[INSTANCE_KEY].ensureAvailable?.();
@@ -9,7 +9,7 @@
   }
 
   const BOT_NAME = "Echo";
-  const UI_VERSION = "4";
+  const UI_VERSION = "5";
   const HISTORY_VERSION = 2;
   const HISTORY_LIMIT = 80;
   const HISTORY_CHARACTER_LIMIT = 160000;
@@ -165,11 +165,15 @@
               );
             })
             .map((item) => ({
+              messageId:
+                item.messageId || null,
               role: item.role,
               text: item.text.slice(
                 0,
                 MESSAGE_CHARACTER_LIMIT
               ),
+              position:
+                Number(item.position) || null,
               timestamp:
                 Number(item.timestamp) ||
                 Date.now()
@@ -367,11 +371,39 @@
                   class="chatbot-header-actions"
                 >
                   <button
+                    id="chatbot-threads-toggle"
+                    class="chatbot-icon-btn"
+                    type="button"
+                    aria-label="Open conversation history"
+                    aria-controls="chatbot-threads-panel"
+                    aria-expanded="false"
+                    title="Conversations"
+                  >
+                    <i
+                      class="fas fa-clock-rotate-left"
+                      aria-hidden="true"
+                    ></i>
+                  </button>
+
+                  <button
+                    id="chatbot-new-thread"
+                    class="chatbot-icon-btn"
+                    type="button"
+                    aria-label="Start a new conversation"
+                    title="New conversation"
+                  >
+                    <i
+                      class="fas fa-pen-to-square"
+                      aria-hidden="true"
+                    ></i>
+                  </button>
+
+                  <button
                     id="chatbot-clear"
                     class="chatbot-icon-btn"
                     type="button"
-                    aria-label="Clear chat history"
-                    title="Clear history"
+                    aria-label="Delete current conversation"
+                    title="Delete conversation"
                   >
                     <i
                       class="fas fa-trash-can"
@@ -432,6 +464,55 @@
                   </button>
                 </div>
               </header>
+
+              <aside
+                id="chatbot-threads-panel"
+                class="chatbot-threads-panel"
+                aria-label="Echo conversations"
+                aria-hidden="true"
+                hidden
+              >
+                <div class="chatbot-threads-header">
+                  <div>
+                    <strong>Conversations</strong>
+                    <small>Saved to your account</small>
+                  </div>
+
+                  <button
+                    id="chatbot-threads-close"
+                    class="chatbot-icon-btn"
+                    type="button"
+                    aria-label="Close conversation history"
+                    title="Close conversations"
+                  >
+                    <i class="fas fa-xmark" aria-hidden="true"></i>
+                  </button>
+                </div>
+
+                <button
+                  id="chatbot-threads-new"
+                  class="chatbot-thread-new"
+                  type="button"
+                >
+                  <i class="fas fa-plus" aria-hidden="true"></i>
+                  <span>New conversation</span>
+                </button>
+
+                <div
+                  id="chatbot-threads-list"
+                  class="chatbot-threads-list"
+                  role="list"
+                ></div>
+
+                <button
+                  id="chatbot-threads-more"
+                  class="chatbot-threads-more"
+                  type="button"
+                  hidden
+                >
+                  Load older conversations
+                </button>
+              </aside>
 
               <div
                 id="chatbot-status"
@@ -526,6 +607,41 @@
           "chatbot-clear"
         ),
 
+      threadsToggle:
+        document.getElementById(
+          "chatbot-threads-toggle"
+        ),
+
+      newThread:
+        document.getElementById(
+          "chatbot-new-thread"
+        ),
+
+      threadsPanel:
+        document.getElementById(
+          "chatbot-threads-panel"
+        ),
+
+      threadsClose:
+        document.getElementById(
+          "chatbot-threads-close"
+        ),
+
+      threadsNew:
+        document.getElementById(
+          "chatbot-threads-new"
+        ),
+
+      threadsList:
+        document.getElementById(
+          "chatbot-threads-list"
+        ),
+
+      threadsMore:
+        document.getElementById(
+          "chatbot-threads-more"
+        ),
+
       hideLauncher:
         document.getElementById(
           "chatbot-hide-launcher"
@@ -587,6 +703,17 @@
       GUEST_HISTORY_KEY;
 
     let history = [];
+    let historyBaseKey = GUEST_HISTORY_KEY;
+    let activeThreadId = null;
+    let threads = [];
+    let threadPage = 0;
+    let threadsHaveMore = false;
+    let messagesHaveMore = false;
+    let nextBeforePosition = null;
+    let remoteHistoryEnabled = false;
+    let threadsPanelOpen = false;
+    let isLoadingThread = false;
+    let isLoadingThreads = false;
     let isSending = false;
     let isOpen = false;
     let launcherSuppressed = false;
@@ -637,10 +764,390 @@
     }
 
     function saveHistory() {
-      history = persistHistory(
+      const persisted = persistHistory(
         historyKey,
         history
       );
+
+      // Keep the browser cache bounded. A server-backed thread that the
+      // user explicitly paged through may remain longer in memory.
+      if (!remoteHistoryEnabled || !activeThreadId) {
+        history = persisted;
+      }
+    }
+
+    function getThreadHistoryKey(threadId) {
+      return `${historyBaseKey}_thread_${escapeKeyPart(threadId)}`;
+    }
+
+    function getDraftHistoryKey() {
+      return `${historyBaseKey}_draft`;
+    }
+
+    function extractResponseList(response) {
+      if (Array.isArray(response)) {
+        return response;
+      }
+
+      return Array.isArray(response?.data)
+        ? response.data
+        : [];
+    }
+
+    function normalizeThread(item) {
+      const threadId = String(
+        item?.threadId || item?.id || ""
+      ).trim();
+
+      if (!threadId) {
+        return null;
+      }
+
+      return {
+        threadId,
+        classroomId:
+          item?.classroomId || null,
+        title:
+          String(item?.title || "New conversation").trim() ||
+          "New conversation",
+        createdAt:
+          item?.createdAt || null,
+        updatedAt:
+          item?.updatedAt || item?.createdAt || null
+      };
+    }
+
+    function normalizeRemoteMessage(item) {
+      const role =
+        String(item?.role || "")
+          .trim()
+          .toLowerCase() === "user"
+          ? "user"
+          : "assistant";
+
+      const text = String(
+        item?.content || item?.text || ""
+      ).trim();
+
+      if (!text) {
+        return null;
+      }
+
+      return {
+        messageId:
+          item?.messageId || item?.id || null,
+        role,
+        text: text.slice(0, MESSAGE_CHARACTER_LIMIT),
+        position:
+          Number(item?.position) || null,
+        timestamp:
+          Date.parse(item?.createdAt || "") || Date.now()
+      };
+    }
+
+    function formatThreadDate(value) {
+      const date = new Date(value || 0);
+      if (Number.isNaN(date.getTime())) {
+        return "";
+      }
+
+      try {
+        return new Intl.DateTimeFormat(undefined, {
+          month: "short",
+          day: "numeric"
+        }).format(date);
+      } catch (_) {
+        return "";
+      }
+    }
+
+    function updateConversationLabel() {
+      const subtitle = elements.header.querySelector(
+        ".chatbot-identity-copy small"
+      );
+
+      if (!subtitle) {
+        return;
+      }
+
+      const current = threads.find(
+        (thread) => thread.threadId === activeThreadId
+      );
+
+      subtitle.textContent = current
+        ? current.title
+        : "New conversation";
+      subtitle.title = subtitle.textContent;
+    }
+
+    function renderThreadList() {
+      elements.threadsList.replaceChildren();
+      elements.threadsMore.hidden =
+        !remoteHistoryEnabled || !threadsHaveMore;
+      elements.threadsMore.disabled = isLoadingThreads;
+      elements.threadsMore.textContent = isLoadingThreads
+        ? "Loading…"
+        : "Load older conversations";
+
+      if (!threads.length) {
+        const empty = document.createElement("p");
+        empty.className = "chatbot-threads-empty";
+        empty.textContent = "No saved conversations yet.";
+        elements.threadsList.appendChild(empty);
+        updateConversationLabel();
+        return;
+      }
+
+      threads.forEach((thread) => {
+        const row = document.createElement("div");
+        row.className = "chatbot-thread-row";
+        row.setAttribute("role", "listitem");
+
+        if (thread.threadId === activeThreadId) {
+          row.classList.add("is-active");
+        }
+
+        const select = document.createElement("button");
+        select.type = "button";
+        select.className = "chatbot-thread-select";
+        select.dataset.threadId = thread.threadId;
+        select.setAttribute(
+          "aria-current",
+          thread.threadId === activeThreadId ? "true" : "false"
+        );
+
+        const title = document.createElement("strong");
+        title.textContent = thread.title;
+
+        const meta = document.createElement("small");
+        const context = thread.classroomId
+          ? "Classroom"
+          : "Dashboard";
+        const date = formatThreadDate(thread.updatedAt);
+        meta.textContent = date
+          ? `${context} · ${date}`
+          : context;
+
+        select.append(title, meta);
+
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "chatbot-thread-delete";
+        remove.dataset.deleteThreadId = thread.threadId;
+        remove.setAttribute(
+          "aria-label",
+          `Delete conversation: ${thread.title}`
+        );
+        remove.title = "Delete conversation";
+        remove.innerHTML =
+          '<i class="fas fa-trash-can" aria-hidden="true"></i>';
+
+        row.append(select, remove);
+        elements.threadsList.appendChild(row);
+      });
+
+      updateConversationLabel();
+    }
+
+    function setThreadsPanel(open) {
+      threadsPanelOpen = Boolean(open);
+      elements.threadsPanel.hidden = !threadsPanelOpen;
+      elements.threadsPanel.setAttribute(
+        "aria-hidden",
+        String(!threadsPanelOpen)
+      );
+      elements.threadsToggle.setAttribute(
+        "aria-expanded",
+        String(threadsPanelOpen)
+      );
+      elements.window.classList.toggle(
+        "chatbot-threads-open",
+        threadsPanelOpen
+      );
+
+      if (threadsPanelOpen) {
+        renderThreadList();
+        focusSafely(elements.threadsNew);
+      }
+    }
+
+    function startNewConversation({ focus = true } = {}) {
+      if (isSending) {
+        return;
+      }
+
+      activeThreadId = null;
+      messagesHaveMore = false;
+      nextBeforePosition = null;
+      historyKey = remoteHistoryEnabled
+        ? getDraftHistoryKey()
+        : historyBaseKey;
+      history = [];
+      saveHistory();
+      renderHistory({ reload: false });
+      renderThreadList();
+      setThreadsPanel(false);
+
+      if (focus) {
+        focusSafely(elements.input);
+      }
+    }
+
+    async function loadThreadMessages(
+      threadId,
+      {
+        beforePosition = null,
+        appendOlder = false
+      } = {}
+    ) {
+      if (!threadId || isLoadingThread || isSending) {
+        return;
+      }
+
+      isLoadingThread = true;
+      setStatus(
+        appendOlder
+          ? "Loading older messages…"
+          : "Loading conversation…"
+      );
+
+      try {
+        const beforeQuery = beforePosition
+          ? `&beforePosition=${encodeURIComponent(beforePosition)}`
+          : "";
+        const response = await window.ApiClient.request(
+          `/chatbot/threads/${encodeURIComponent(threadId)}/messages?size=100${beforeQuery}`,
+          {
+            method: "GET",
+            headers: { Accept: "application/json" }
+          },
+          {
+            redirectOnUnauthorized: false,
+            retryOnRefresh: true
+          }
+        );
+
+        const loadedMessages = extractResponseList(response)
+          .map(normalizeRemoteMessage)
+          .filter(Boolean);
+        const previousHeight = elements.messages.scrollHeight;
+
+        activeThreadId = threadId;
+        historyKey = getThreadHistoryKey(threadId);
+        history = appendOlder
+          ? [
+              ...loadedMessages,
+              ...history.filter(
+                (existing) => !loadedMessages.some(
+                  (loaded) =>
+                    loaded.messageId &&
+                    loaded.messageId === existing.messageId
+                )
+              )
+            ]
+          : loadedMessages;
+        messagesHaveMore = response?.hasMore === true;
+        nextBeforePosition =
+          Number(response?.nextBeforePosition) || null;
+        saveHistory();
+        renderHistory({
+          reload: false,
+          scrollToBottom: !appendOlder
+        });
+
+        if (appendOlder) {
+          elements.messages.scrollTop = Math.max(
+            0,
+            elements.messages.scrollHeight - previousHeight
+          );
+        }
+
+        renderThreadList();
+        if (!appendOlder) {
+          setThreadsPanel(false);
+        }
+      } catch (error) {
+        setStatus(
+          "That conversation could not be loaded.",
+          2200
+        );
+      } finally {
+        isLoadingThread = false;
+        if (!elements.status.textContent.includes("could not")) {
+          setStatus("");
+        }
+      }
+    }
+
+    async function loadThreads({
+      selectLatest = true,
+      page = 0,
+      append = false
+    } = {}) {
+      if (!window.ApiClient?.request || isLoadingThreads) {
+        return false;
+      }
+
+      isLoadingThreads = true;
+      renderThreadList();
+
+      try {
+        const response = await window.ApiClient.request(
+          `/chatbot/threads?page=${Math.max(0, page)}&size=50`,
+          {
+            method: "GET",
+            headers: { Accept: "application/json" }
+          },
+          {
+            redirectOnUnauthorized: false,
+            retryOnRefresh: true
+          }
+        );
+
+        const loadedThreads = extractResponseList(response)
+          .map(normalizeThread)
+          .filter(Boolean);
+        threads = append
+          ? [
+              ...threads,
+              ...loadedThreads.filter(
+                (loaded) => !threads.some(
+                  (existing) => existing.threadId === loaded.threadId
+                )
+              )
+            ]
+          : loadedThreads;
+        threadPage = Number.isInteger(response?.page)
+          ? response.page
+          : Math.max(0, page);
+        threadsHaveMore = response?.hasMore === true;
+        remoteHistoryEnabled = true;
+        renderThreadList();
+
+        if (!selectLatest) {
+          return true;
+        }
+
+        const selected = threads.find(
+          (thread) => thread.threadId === activeThreadId
+        ) || threads[0];
+
+        if (selected) {
+          await loadThreadMessages(selected.threadId);
+        } else {
+          startNewConversation({ focus: false });
+        }
+
+        return true;
+      } catch (_) {
+        if (!append) {
+          remoteHistoryEnabled = false;
+        }
+        return false;
+      } finally {
+        isLoadingThreads = false;
+        renderThreadList();
+      }
     }
 
     function appendFormattedText(
@@ -703,8 +1210,9 @@
       heading.textContent =
         `Hi, I’m ${BOT_NAME}.`;
 
-      description.textContent =
-        "Ask about CodeTracker, your classroom, or an activity. Your recent chat is saved in this browser.";
+      description.textContent = remoteHistoryEnabled
+        ? "Ask about CodeTracker, your classroom, or an activity. This conversation is saved to your account."
+        : "Ask about CodeTracker, your classroom, or an activity. This conversation is saved on this browser.";
 
       copy.append(
         heading,
@@ -796,10 +1304,15 @@
       return wrapper;
     }
 
-    function renderHistory() {
+    function renderHistory({
+      reload = true,
+      scrollToBottom = true
+    } = {}) {
       elements.messages.replaceChildren();
 
-      history = readHistory();
+      if (reload) {
+        history = readHistory();
+      }
 
       if (!history.length) {
         createWelcome();
@@ -809,8 +1322,10 @@
         renderMessage(item)
       );
 
-      elements.messages.scrollTop =
-        elements.messages.scrollHeight;
+      if (scrollToBottom) {
+        elements.messages.scrollTop =
+          elements.messages.scrollHeight;
+      }
     }
 
     function addPersistentMessage(
@@ -884,6 +1399,9 @@
       isSending = sending;
       elements.input.disabled = sending;
       elements.send.disabled = sending;
+      elements.newThread.disabled = sending;
+      elements.clear.disabled = sending;
+      elements.threadsNew.disabled = sending;
 
       elements.send.classList.toggle(
         "is-loading",
@@ -1226,6 +1744,7 @@
       }
 
       isOpen = false;
+      setThreadsPanel(false);
 
       elements.window.classList.add(
         "chatbot-closing"
@@ -1326,6 +1845,7 @@
       );
 
       if (willMinimize) {
+        setThreadsPanel(false);
         elements.window.classList.remove(
           "chatbot-maximized"
         );
@@ -1391,19 +1911,79 @@
       return window.confirm(message);
     }
 
-    async function clearHistory() {
-      const confirmed =
-        await confirmAction(
-          "Clear Echo’s saved chat history on this browser?",
+    async function deleteThread(threadId, { ask = true } = {}) {
+      const thread = threads.find(
+        (item) => item.threadId === threadId
+      );
+
+      if (!threadId || !remoteHistoryEnabled || isSending) {
+        return false;
+      }
+
+      if (ask) {
+        const confirmed = await confirmAction(
+          `Delete “${thread?.title || "this conversation"}”? This cannot be undone.`,
           {
-            title: "Clear chat history",
-            confirmText:
-              "Clear history",
-            cancelText:
-              "Keep history",
+            title: "Delete conversation",
+            confirmText: "Delete",
+            cancelText: "Keep conversation",
             danger: true
           }
         );
+
+        if (!confirmed) {
+          return false;
+        }
+      }
+
+      try {
+        await window.ApiClient.request(
+          `/chatbot/threads/${encodeURIComponent(threadId)}`,
+          { method: "DELETE" },
+          {
+            redirectOnUnauthorized: false,
+            retryOnRefresh: true
+          }
+        );
+
+        safeRemove(getThreadHistoryKey(threadId));
+        threads = threads.filter(
+          (item) => item.threadId !== threadId
+        );
+
+        if (activeThreadId === threadId) {
+          startNewConversation({ focus: false });
+        } else {
+          renderThreadList();
+        }
+
+        setStatus("Conversation deleted.", 1800);
+        return true;
+      } catch (error) {
+        setStatus("The conversation could not be deleted.", 2400);
+        return false;
+      }
+    }
+
+    async function clearHistory() {
+      if (remoteHistoryEnabled && activeThreadId) {
+        await deleteThread(activeThreadId);
+        return;
+      }
+
+      const confirmed = await confirmAction(
+        remoteHistoryEnabled
+          ? "Clear this unsent conversation draft?"
+          : "Clear Echo’s saved chat history on this browser?",
+        {
+          title: remoteHistoryEnabled
+            ? "Clear draft"
+            : "Clear chat history",
+          confirmText: "Clear",
+          cancelText: "Keep conversation",
+          danger: true
+        }
+      );
 
       if (!confirmed) {
         return;
@@ -1411,10 +1991,12 @@
 
       history = [];
       saveHistory();
-      renderHistory();
+      renderHistory({ reload: false });
 
       setStatus(
-        "Chat history cleared.",
+        remoteHistoryEnabled
+          ? "Draft cleared."
+          : "Chat history cleared.",
         1800
       );
     }
@@ -1623,7 +2205,9 @@
               body: JSON.stringify({
                 message,
                 classroomId:
-                  getClassroomId()
+                  getClassroomId(),
+                threadId:
+                  activeThreadId
               })
             },
             {
@@ -1644,10 +2228,29 @@
           data?.data?.message ||
           "Sorry, I could not generate a response.";
 
+        const returnedThreadId = String(
+          data?.threadId || data?.data?.threadId || ""
+        ).trim();
+
+        if (returnedThreadId) {
+          const wasDraft = !activeThreadId;
+          activeThreadId = returnedThreadId;
+          historyKey = getThreadHistoryKey(returnedThreadId);
+          saveHistory();
+
+          if (wasDraft) {
+            safeRemove(getDraftHistoryKey());
+          }
+        }
+
         addPersistentMessage(
           reply,
           "assistant"
         );
+
+        if (returnedThreadId) {
+          await loadThreads({ selectLatest: false });
+        }
       } catch (error) {
         thinking.remove();
 
@@ -1730,14 +2333,10 @@
             identifier
           )}_v${HISTORY_VERSION}`;
 
-        if (
-          userKey === historyKey
-        ) {
-          return;
-        }
-
+        historyBaseKey = userKey;
         historyKey = userKey;
         renderHistory();
+        await loadThreads();
       } catch (_) {
         // Guest history remains available as a fallback.
       }
@@ -1799,6 +2398,86 @@
     );
 
     addManagedEvent(
+      elements.threadsToggle,
+      "click",
+      () => setThreadsPanel(!threadsPanelOpen)
+    );
+
+    addManagedEvent(
+      elements.threadsClose,
+      "click",
+      () => {
+        setThreadsPanel(false);
+        focusSafely(elements.threadsToggle);
+      }
+    );
+
+    const beginNewThread = () =>
+      startNewConversation();
+
+    addManagedEvent(
+      elements.newThread,
+      "click",
+      beginNewThread
+    );
+
+    addManagedEvent(
+      elements.threadsNew,
+      "click",
+      beginNewThread
+    );
+
+    addManagedEvent(
+      elements.threadsMore,
+      "click",
+      () => void loadThreads({
+        selectLatest: false,
+        page: threadPage + 1,
+        append: true
+      })
+    );
+
+    addManagedEvent(
+      elements.threadsList,
+      "click",
+      (event) => {
+        const deleteButton = event.target.closest(
+          "[data-delete-thread-id]"
+        );
+
+        if (deleteButton) {
+          void deleteThread(deleteButton.dataset.deleteThreadId);
+          return;
+        }
+
+        const selectButton = event.target.closest(
+          "[data-thread-id]"
+        );
+
+        if (selectButton) {
+          void loadThreadMessages(selectButton.dataset.threadId);
+        }
+      }
+    );
+
+    addManagedEvent(
+      elements.messages,
+      "click",
+      (event) => {
+        if (
+          event.target.closest("[data-load-older-messages]") &&
+          activeThreadId &&
+          nextBeforePosition
+        ) {
+          void loadThreadMessages(activeThreadId, {
+            beforePosition: nextBeforePosition,
+            appendOlder: true
+          });
+        }
+      }
+    );
+
+    addManagedEvent(
       elements.hideLauncher,
       "click",
       hideLauncher
@@ -1853,6 +2532,12 @@
           event.key === "Escape" &&
           isOpen
         ) {
+          if (threadsPanelOpen) {
+            setThreadsPanel(false);
+            focusSafely(elements.threadsToggle);
+            return;
+          }
+
           closeChatbot();
           return;
         }
@@ -2023,3 +2708,18 @@
       publicApi;
   });
 })();
+      if (
+        remoteHistoryEnabled &&
+        activeThreadId &&
+        messagesHaveMore
+      ) {
+        const older = document.createElement("button");
+        older.type = "button";
+        older.className = "chatbot-messages-more";
+        older.dataset.loadOlderMessages = "true";
+        older.disabled = isLoadingThread;
+        older.textContent = isLoadingThread
+          ? "Loading older messages…"
+          : "Load older messages";
+        elements.messages.appendChild(older);
+      }

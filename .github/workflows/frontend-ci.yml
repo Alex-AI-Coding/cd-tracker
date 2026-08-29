@@ -1,0 +1,34 @@
+name: Frontend CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Check JavaScript syntax
+        run: |
+          node --check frontend/script/api-client.js
+          node --check frontend/script/chatbot.js
+          node --check frontend/script/script.js
+          node --check frontend/script/theme.js
+
+      - name: Run frontend tests
+        run: node --test tests/*.test.mjs

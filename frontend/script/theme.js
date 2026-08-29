@@ -19,6 +19,8 @@
 
   let currentPreference = readSavedPreference();
   let backendPreferenceSupported = null;
+  let preferenceRevision = 0;
+  let accountSaveQueue = Promise.resolve();
 
   /**
    * The public login page always uses CodeTracker's original dark design.
@@ -156,6 +158,7 @@
     );
 
     if (sync) {
+      preferenceRevision += 1;
       void savePreferenceToAccount(safePreference);
     }
   }
@@ -578,6 +581,8 @@
       return;
     }
 
+    const revisionAtRequestStart = preferenceRevision;
+
     try {
       const response =
         await window.ApiClient.request(
@@ -590,11 +595,17 @@
           },
           {
             redirectOnUnauthorized: false,
-            retryOnRefresh: false
+            retryOnRefresh: true
           }
         );
 
       backendPreferenceSupported = true;
+
+      // A slow GET must not overwrite a choice the user made while it
+      // was in flight. That newer choice is already queued for saving.
+      if (preferenceRevision !== revisionAtRequestStart) {
+        return;
+      }
 
       const accountPreference =
         getPreferenceFromResponse(response);
@@ -607,6 +618,10 @@
             sync: false
           }
         );
+      } else {
+        // Preserve an existing browser preference when the account has
+        // not stored one yet, then make the database authoritative.
+        await savePreferenceToAccount(currentPreference);
       }
     } catch (error) {
       const message =
@@ -621,7 +636,7 @@
   /**
    * Save the user's preference to the backend when supported.
    */
-  async function savePreferenceToAccount(
+  function savePreferenceToAccount(
     preference
   ) {
     if (
@@ -629,38 +644,46 @@
       !window.ApiClient?.request ||
       backendPreferenceSupported === false
     ) {
-      return;
+      return Promise.resolve();
     }
 
-    try {
-      await window.ApiClient.request(
-        PREFERENCES_ENDPOINT,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json"
-          },
-          body: JSON.stringify({
-            themePreference:
-              preference.toUpperCase()
-          })
-        },
-        {
-          redirectOnUnauthorized: false,
-          retryOnRefresh: false
+    // Serialize updates so rapid theme clicks cannot finish out of order
+    // and leave the database with an older preference.
+    accountSaveQueue = accountSaveQueue
+      .catch(() => undefined)
+      .then(async () => {
+        try {
+          await window.ApiClient.request(
+            PREFERENCES_ENDPOINT,
+            {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json"
+              },
+              body: JSON.stringify({
+                themePreference:
+                  preference.toUpperCase()
+              })
+            },
+            {
+              redirectOnUnauthorized: false,
+              retryOnRefresh: true
+            }
+          );
+
+          backendPreferenceSupported = true;
+        } catch (error) {
+          const message =
+            String(error?.message || "");
+
+          if (/404|not found|405/i.test(message)) {
+            backendPreferenceSupported = false;
+          }
         }
-      );
+      });
 
-      backendPreferenceSupported = true;
-    } catch (error) {
-      const message =
-        String(error?.message || "");
-
-      if (/404|not found|405/i.test(message)) {
-        backendPreferenceSupported = false;
-      }
-    }
+    return accountSaveQueue;
   }
 
   /**
