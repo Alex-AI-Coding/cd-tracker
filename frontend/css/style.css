@@ -455,14 +455,25 @@ a {
 /* Keep the desktop login screen fixed in the viewport. Mobile layouts may
    still scroll when their stacked content needs more vertical space. */
 @media (min-width: 901px) {
+  /* html uses zoom: 1.25 above, so 100dvh would otherwise extend below
+     the visible browser window and create a page scrollbar. */
   html,
   body {
-    height: 100%;
     overflow: hidden;
   }
 
+  body {
+    height: calc((100dvh - 2rem) / 1.25);
+    min-height: calc((100dvh - 2rem) / 1.25);
+  }
+
+  .login-page,
+  .login-container {
+    min-height: 100%;
+    height: 100%;
+  }
+
   .login-page {
-    height: calc(100dvh - 2rem);
     overflow: hidden;
   }
 }
