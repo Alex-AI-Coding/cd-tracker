@@ -467,13 +467,16 @@ a {
     min-height: calc((100dvh - 2rem) / 1.25);
   }
 
-  .login-page,
   .login-container {
-    min-height: 100%;
+    min-height: 0;
     height: 100%;
   }
 
   .login-page {
+    position: fixed;
+    inset: 1rem;
+    height: auto;
+    min-height: 0;
     overflow: hidden;
   }
 }

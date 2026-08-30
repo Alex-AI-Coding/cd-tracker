@@ -173,8 +173,20 @@ a {
 }
 
 body {
+  margin: 1rem;
+  min-height: calc(100dvh - 2rem);
   background-color: var(--color-page) !important;
   color: var(--color-text) !important;
+}
+
+/* Keep working-page headers inside the same framed layout as the page body.
+   The calculated width prevents the horizontal overflow caused by combining
+   width: 100% with inline margins on smaller screens. */
+.dashboard-header,
+.header {
+  width: calc(100% - 2rem);
+  margin: 1rem;
+  top: 1rem;
 }
 
 ::selection {
@@ -650,8 +662,17 @@ html[data-theme="light"] :where(code, pre, .code-block, .syntax-code) {
   }
 
   body {
+    margin: 0.75rem;
+    min-height: calc(100dvh - 1.5rem);
     min-width: 0 !important;
     overflow-x: hidden;
+  }
+
+  .dashboard-header,
+  .header {
+    width: calc(100% - 1.5rem);
+    margin: 0.75rem;
+    top: 0.75rem;
   }
 
   :where(.modal-content, .profile-dropdown, .professor-dropdown, .dropdown-menu) {
@@ -660,6 +681,18 @@ html[data-theme="light"] :where(code, pre, .code-block, .syntax-code) {
 }
 
 @media (max-width: 420px) {
+  body {
+    margin: 0.5rem;
+    min-height: calc(100dvh - 1rem);
+  }
+
+  .dashboard-header,
+  .header {
+    width: calc(100% - 1rem);
+    margin: 0.5rem;
+    top: 0.5rem;
+  }
+
   :where(h1, .welcome-title) {
     overflow-wrap: anywhere;
   }

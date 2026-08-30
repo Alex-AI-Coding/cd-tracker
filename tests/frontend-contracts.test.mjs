@@ -65,3 +65,20 @@ test("theme and Echo use the new account persistence endpoints", () => {
   assert.match(chatbot, /threadId/);
   assert.match(chatbot, /Load older messages/);
 });
+
+test("framed page spacing stays constrained on desktop and mobile", () => {
+  const loginCss = read("frontend/css/style.css");
+  assert.match(
+    loginCss,
+    /@media\s*\(min-width:\s*901px\)[\s\S]*?\.login-page\s*\{[\s\S]*?position:\s*fixed;[\s\S]*?inset:\s*1rem;[\s\S]*?min-height:\s*0;[\s\S]*?overflow:\s*hidden;/
+  );
+
+  const themeCss = read("frontend/css/theme.css");
+  assert.match(themeCss, /body\s*\{\s*margin:\s*1rem;[\s\S]*?min-height:\s*calc\(100dvh\s*-\s*2rem\);/);
+  assert.match(
+    themeCss,
+    /\.dashboard-header,\s*\.header\s*\{[\s\S]*?width:\s*calc\(100%\s*-\s*2rem\);[\s\S]*?margin:\s*1rem;[\s\S]*?top:\s*1rem;/
+  );
+  assert.match(themeCss, /@media\s*\(max-width:\s*768px\)[\s\S]*?margin:\s*0\.75rem;/);
+  assert.match(themeCss, /@media\s*\(max-width:\s*420px\)[\s\S]*?margin:\s*0\.5rem;/);
+});
