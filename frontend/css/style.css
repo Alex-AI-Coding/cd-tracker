@@ -452,6 +452,21 @@ a {
   }
 }
 
+/* Keep the desktop login screen fixed in the viewport. Mobile layouts may
+   still scroll when their stacked content needs more vertical space. */
+@media (min-width: 901px) {
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .login-page {
+    height: calc(100dvh - 2rem);
+    overflow: hidden;
+  }
+}
+
 @media (max-height: 820px) and (min-width: 901px) {
   .login-container {
     min-height: auto;
