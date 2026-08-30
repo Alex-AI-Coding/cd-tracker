@@ -31,8 +31,10 @@ select,
 }
 
 body {
+  /* Keep a small, consistent frame around the login screen. */
+  margin: 1rem;
   min-width: 320px;
-  min-height: 100vh;
+  min-height: calc(100dvh - 2rem);
   overflow-x: hidden;
   background: var(--color-page);
   color: var(--color-text);
@@ -96,7 +98,7 @@ a {
 .login-page {
   display: flex;
   min-width: 0;
-  min-height: 100vh;
+  min-height: calc(100dvh - 2rem);
 }
 
 /* ── Left brand panel ────────────────────────────────────────────── */
@@ -274,7 +276,7 @@ a {
   align-items: center;
   justify-content: center;
   min-width: 0;
-  min-height: 100vh;
+  min-height: calc(100dvh - 2rem);
   padding: 64px 40px;
   background: var(--color-page);
   transition: background-color 0.2s ease;
@@ -447,6 +449,32 @@ a {
 
   .login-sub {
     font-size: 16px;
+  }
+}
+
+/* Keep the desktop login screen fixed in the viewport. Mobile layouts may
+   still scroll when their stacked content needs more vertical space. */
+@media (min-width: 901px) {
+  /* html uses zoom: 1.25 above, so 100dvh would otherwise extend below
+     the visible browser window and create a page scrollbar. */
+  html,
+  body {
+    overflow: hidden;
+  }
+
+  body {
+    height: calc((100dvh - 2rem) / 1.25);
+    min-height: calc((100dvh - 2rem) / 1.25);
+  }
+
+  .login-page,
+  .login-container {
+    min-height: 100%;
+    height: 100%;
+  }
+
+  .login-page {
+    overflow: hidden;
   }
 }
 
