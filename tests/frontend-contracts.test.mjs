@@ -82,3 +82,40 @@ test("framed page spacing stays constrained on desktop and mobile", () => {
   assert.match(themeCss, /@media\s*\(max-width:\s*768px\)[\s\S]*?margin:\s*0\.75rem;/);
   assert.match(themeCss, /@media\s*\(max-width:\s*420px\)[\s\S]*?margin:\s*0\.5rem;/);
 });
+
+test("light theme uses the complete warm neutral palette", () => {
+  const css = read("frontend/css/theme.css");
+  const lightTheme = css.match(/html\[data-theme=["']light["']\]\s*\{([\s\S]*?)\n\}/)?.[1];
+
+  assert.ok(lightTheme, "theme.css must define a light-theme token block");
+  for (const [token, value] of Object.entries({
+    "color-page": "#f1f0ed",
+    "color-page-deep": "#e8e6e1",
+    "color-surface": "#faf9f6",
+    "color-surface-raised": "#f4f2ee",
+    "color-surface-hover": "#eceae5",
+    "color-surface-inset": "#f0eeea",
+    "color-border": "#d2d0ca",
+    "color-border-strong": "#b9b6ae"
+  })) {
+    assert.match(lightTheme, new RegExp(`--${token}:\\s*${value};`, "i"));
+    assert.equal(
+      css.match(new RegExp(`--${token}:`, "g"))?.length,
+      2,
+      `${token} must not be overridden by a later light-theme block`
+    );
+  }
+
+  assert.match(lightTheme, /--color-control:\s*#fdfcf9;/i);
+  assert.match(lightTheme, /--color-control-hover:\s*#f1efeb;/i);
+  assert.match(lightTheme, /--color-brand-start:\s*#f7f5f1;/i);
+  assert.match(lightTheme, /--color-brand-end:\s*#e7e4de;/i);
+  assert.match(lightTheme, /--color-toggle-background:\s*rgba\(250,\s*249,\s*246,\s*0\.94\);/i);
+  assert.match(lightTheme, /--color-toggle-hover:\s*#eeece7;/i);
+  assert.match(lightTheme, /--shadow-card:[\s\S]*?rgba\(66,\s*61,\s*52,\s*0\.08\)[\s\S]*?inset 0 1px rgba\(255,\s*255,\s*255,\s*0\.72\);/i);
+  assert.match(lightTheme, /--shadow-floating:[\s\S]*?rgba\(66,\s*61,\s*52,\s*0\.12\)[\s\S]*?rgba\(66,\s*61,\s*52,\s*0\.14\);/i);
+
+  assert.match(css, /html\[data-theme="light"\]\s+body\s*\{[\s\S]*?radial-gradient\(ellipse at 8% 0%[\s\S]*?radial-gradient\(ellipse at 96% 100%[\s\S]*?linear-gradient\(135deg/);
+  assert.match(css, /Light-mode cards[\s\S]*?linear-gradient\(145deg, rgba\(255, 255, 255, 0\.58\), transparent 38%\)[\s\S]*?box-shadow:\s*var\(--shadow-card\)/);
+  assert.match(css, /html\[data-theme="light"\][\s\S]*?:where\([\s\S]*?\.activity-card[\s\S]*?\):hover\s*\{[\s\S]*?0 11px 24px rgba\(66, 61, 52, 0\.10\)/);
+});

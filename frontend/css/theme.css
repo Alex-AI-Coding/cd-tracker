@@ -59,14 +59,14 @@ html[data-theme="dark"] {
 html[data-theme="light"] {
   color-scheme: light;
 
-  --color-page: #f6f8fa;
-  --color-page-deep: #eef1f4;
-  --color-surface: #ffffff;
-  --color-surface-raised: #f6f8fa;
-  --color-surface-hover: #f0f2f4;
-  --color-surface-inset: #f6f8fa;
-  --color-border: #d0d7de;
-  --color-border-strong: #afb8c1;
+  --color-page: #f1f0ed;
+  --color-page-deep: #e8e6e1;
+  --color-surface: #faf9f6;
+  --color-surface-raised: #f4f2ee;
+  --color-surface-hover: #eceae5;
+  --color-surface-inset: #f0eeea;
+  --color-border: #d2d0ca;
+  --color-border-strong: #b9b6ae;
 
   --color-text: #24292f;
   --color-heading: #1f2328;
@@ -88,24 +88,27 @@ html[data-theme="light"] {
   --color-warning: #9a6700;
   --color-attention: #bc4c00;
 
-  --color-control: #ffffff;
-  --color-control-hover: #f6f8fa;
+  --color-control: #fdfcf9;
+  --color-control-hover: #f1efeb;
   --color-button-background: #24292f;
   --color-button-text: #ffffff;
   --color-button-hover: #1f2328;
   --color-overlay: rgba(31, 35, 40, 0.42);
 
-  --color-brand-start: #f6f8fa;
-  --color-brand-end: #eaeef2;
+  --color-brand-start: #f7f5f1;
+  --color-brand-end: #e7e4de;
   --color-note-background: rgba(9, 105, 218, 0.08);
   --color-note-border: rgba(9, 105, 218, 0.25);
   --color-note-hover: rgba(9, 105, 218, 0.07);
   --color-note-divider: rgba(9, 105, 218, 0.18);
-  --color-toggle-background: rgba(255, 255, 255, 0.96);
-  --color-toggle-hover: #f0f2f4;
+  --color-toggle-background: rgba(250, 249, 246, 0.94);
+  --color-toggle-hover: #eeece7;
 
-  --shadow-card: 0 16px 40px rgba(31, 35, 40, 0.12);
-  --shadow-floating: 0 10px 28px rgba(31, 35, 40, 0.18);
+  --shadow-card: 0 1px 2px rgba(66, 61, 52, 0.08),
+    0 7px 18px rgba(66, 61, 52, 0.07),
+    inset 0 1px rgba(255, 255, 255, 0.72);
+  --shadow-floating: 0 2px 5px rgba(66, 61, 52, 0.12),
+    0 12px 30px rgba(66, 61, 52, 0.14);
 }
 
 /* Aliases for the existing page-specific design systems. */
@@ -408,7 +411,10 @@ select option {
 
 /* Syntax analyzer uses an inline variable system. */
 html[data-theme="light"] body {
-  background-image: radial-gradient(circle at top, rgba(9, 105, 218, 0.07), transparent 28%) !important;
+  background-image:
+    radial-gradient(ellipse at 8% 0%, rgba(255, 255, 255, 0.72), transparent 34%),
+    radial-gradient(ellipse at 96% 100%, rgba(157, 145, 124, 0.10), transparent 40%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 46%) !important;
 }
 
 html[data-theme="light"] .results-section {
@@ -471,14 +477,57 @@ html[data-theme="light"] .supported-badge {
 ================================================================ */
 
 html[data-theme="light"] {
-  /* Darker secondary text keeps helper copy readable on white cards. */
+  /* Darker secondary text keeps helper copy readable on warm cards. */
   --color-muted: #4b5563;
   --color-subtle: #53606d;
   --color-subtle-text: #57606a;
-  --color-border: #c7d0d9;
-  --color-border-strong: #9da8b3;
-  --color-surface-hover: #edf1f5;
-  --color-surface-raised: #f2f5f8;
+}
+
+/* Light-mode cards retain each page's layout while gaining a gentle surface
+   edge and compact shadow that separates them from the warm background. */
+html[data-theme="light"] :where(
+  .section,
+  .students-section,
+  .activity-section,
+  .assignments-section,
+  .announcements-section,
+  .class-card,
+  .assignment-card,
+  .announcement-card,
+  .announcement-item,
+  .activity-card,
+  .student-card,
+  .classroom-card,
+  .submission-card,
+  .details-card,
+  .detail-section,
+  .stat-card,
+  .tutorial-card,
+  .welcome-container,
+  .form-panel,
+  .input-section,
+  .card
+) {
+  background-image: linear-gradient(145deg, rgba(255, 255, 255, 0.58), transparent 38%) !important;
+  box-shadow: var(--shadow-card) !important;
+}
+
+html[data-theme="light"] :where(
+  .class-card,
+  .assignment-card,
+  .announcement-card,
+  .announcement-item,
+  .activity-card,
+  .student-card,
+  .classroom-card,
+  .submission-card,
+  .stat-card,
+  .tutorial-card,
+  .card
+):hover {
+  box-shadow: 0 2px 4px rgba(66, 61, 52, 0.09),
+    0 11px 24px rgba(66, 61, 52, 0.10),
+    inset 0 1px rgba(255, 255, 255, 0.78) !important;
 }
 
 html[data-theme="light"] :where(
@@ -648,7 +697,7 @@ html[data-theme="light"] :where(
 
 html[data-theme="light"] :where(code, pre, .code-block, .syntax-code) {
   color: #1f2328 !important;
-  background-color: #f0f3f6 !important;
+  background-color: var(--color-surface-raised) !important;
   border-color: var(--color-border) !important;
 }
 
