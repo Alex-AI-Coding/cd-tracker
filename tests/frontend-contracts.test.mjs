@@ -119,3 +119,20 @@ test("light theme uses the complete warm neutral palette", () => {
   assert.match(css, /Light-mode cards[\s\S]*?linear-gradient\(145deg, rgba\(255, 255, 255, 0\.58\), transparent 38%\)[\s\S]*?box-shadow:\s*var\(--shadow-card\)/);
   assert.match(css, /html\[data-theme="light"\][\s\S]*?:where\([\s\S]*?\.activity-card[\s\S]*?\):hover\s*\{[\s\S]*?0 11px 24px rgba\(66, 61, 52, 0\.10\)/);
 });
+
+test("shared headers use theme-specific depth without changing responsive framing", () => {
+  const css = read("frontend/css/theme.css");
+  const darkTheme = css.match(/:root,\s*html\[data-theme=["']dark["']\]\s*\{([\s\S]*?)\n\}/)?.[1];
+  const lightTheme = css.match(/html\[data-theme=["']light["']\]\s*\{([\s\S]*?)\n\}/)?.[1];
+
+  assert.ok(darkTheme, "theme.css must define dark-theme tokens");
+  assert.ok(lightTheme, "theme.css must define light-theme tokens");
+  assert.match(darkTheme, /--shadow-header:\s*0 3px 10px rgba\(0,\s*0,\s*0,\s*0\.22\);/);
+  assert.match(darkTheme, /--highlight-header:\s*rgba\(255,\s*255,\s*255,\s*0\.05\);/);
+  assert.match(lightTheme, /--shadow-header:\s*0 3px 10px rgba\(31,\s*35,\s*40,\s*0\.10\);/);
+  assert.match(lightTheme, /--highlight-header:\s*rgba\(255,\s*255,\s*255,\s*0\.75\);/);
+  assert.match(
+    css,
+    /\.dashboard-header,\s*\.header\s*\{[\s\S]*?border:\s*1px solid var\(--color-border\) !important;[\s\S]*?border-radius:\s*12px;[\s\S]*?box-shadow:\s*var\(--shadow-header\),\s*inset 0 1px 0 var\(--highlight-header\);/
+  );
+});
